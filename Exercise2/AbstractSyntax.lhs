@@ -7,6 +7,7 @@ import Data.Char
 data Token =  TkArr| TkLPar| TkComma| TkRPar| TkBool| TkIntWrd| TkVarId String
  | TkAbs| TkColon| TkFullStop| TkApp|  TkTrue| TkFalse| TkIf| TkThen | TkElse
  | TkFi| TkIntLit Integer| TkPlus| TkMinus| TkMul| TkDiv| TkNand| TkEq| TkLt 
+ | TkFix| TkLet| TkIn| TkEnd
  deriving (Show, Eq)
 
 data Type = TypeArrow Type Type | TypeBool  | TypeInt deriving (Eq)
@@ -16,7 +17,7 @@ type Var = String
 data Term = Var Var | Abs Var Type Term | App Term Term | Tru | Fls 
  | If Term Term Term | IntConst Integer| IntAdd Term Term| IntSub Term Term
  | IntMul Term Term| IntDiv Term Term| IntNand Term Term| IntEq Term Term
- | IntLt Term Term | ParTerm Term 
+ | IntLt Term Term | ParTerm Term| Fix Term| Let Var Term Term
  deriving (Eq)
 
 instance Show Type where
