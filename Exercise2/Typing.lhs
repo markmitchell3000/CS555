@@ -35,7 +35,7 @@ typing capGamma t = case t of
   S.Let x t1 t2 -> do tau1 <- typing capGamma t1
                       typing (Bind capGamma x tau1) t2
   S.Fix t -> do (S.TypeArrow tau1 tau2) <- typing capGamma t
-                             Just tau2
+                Just tau2
   S.IntConst _ -> Just S.TypeInt
   S.IntAdd t1 t2 -> arith t1 t2
   S.IntSub t1 t2 -> arith t1 t2

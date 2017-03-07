@@ -33,6 +33,8 @@ instance Show Term where
   show Fls           = "false"
   show (If x y z)    = "if "++(show x)++" then "++(show y)++" else " ++(show z)
                       ++" fi"
+  show (Fix x)       = "fix "++(show x)
+  show (Let x y z)   = "let "++x++" = "++ (show y)++" in " ++(show z)++ " end"
   show (IntConst x)  = show x
   show (IntAdd x y)  = "+(" ++ (show x) ++","++ (show y) ++")"
   show (IntSub x y)  = "-(" ++ (show x) ++","++ (show y) ++")"
@@ -133,7 +135,7 @@ buildTerm (x:xs)
   | x== TkApp = appTerm xs
   | x== TkIf  = ifTerm xs
   | x== TkLPar = ParTerm (parCase xs)
-  | x== TkFix = Fix (parCase xs)
+  | (x== TkFix) && ((head xs)==TkLPar) = Fix (parCase (tail xs))
   | x== TkLet = letTerm xs 
   | (x== TkPlus)&&((head xs)==TkLPar) = 
     let operands = (caseHelper (parRemove xs) commaSeperated TkComma 0 [])
@@ -185,7 +187,7 @@ letTerm (x:xs) =
 
 -- Function checks for closing end term for let functions
 letFix :: [Token] -> [Token]
-letFix (x:xs) = if (x== TkEq)(last xs == TkEnd) then (init xs) 
+letFix (x:xs) = if ((x== TkEq)&&(last xs == TkEnd)) then (init xs) 
                 else error ("missing end word")
 letFix _ = error ("Improper use of let expression")
 
@@ -256,7 +258,7 @@ subHelper x s (IntLt t1 t2)  = IntLt (subst x s t1) (subst x s t2)
 subHelper x s (ParTerm t)    = ParTerm (subHelper x s t)
 subHelper x s (Fix t)        = Fix (subHelper x s t)
 subHelper x s (Let y t1 t2)  = 
-  Let (subst x s t1) (if x==y then t2 else (subst x s t2))
+  Let y (subst x s t1) (if x==y then t2 else (subst x s t2))
 subHelper _ _ z              = z
 
 isValue:: Term -> Bool

@@ -34,8 +34,9 @@ eval1 t = case t of
     |  t1==S.Tru -> Just t2
     |  t1==S.Fls -> Just t3
     |  otherwise -> Nothing
-  S.Fix (S.Abs x _ t1) -> Just (S.subst x (S.Fix (S.Abs x _ t1)) t1)
-  S.Fix t -> if (eval t) == Nothing then Nothing else Just (S.Fix (eval t))
+  S.Fix (S.Abs x y t1) -> Just (S.subst x (S.Fix (S.Abs x y t1)) t1)
+  S.Fix t -> if ((eval1 t) == Nothing) then Nothing 
+             else Just (S.Fix (justVal(eval1 t)))
   S.Let x t1 t2 
     | S.isValue t1 -> Just (S.subst x t1 t2)
     | otherwise -> let newT1 = (eval1 t1)
