@@ -87,6 +87,10 @@ matchToken "if"     = TkIf
 matchToken "then"   = TkThen
 matchToken "else"   = TkElse
 matchToken "fi"     = TkFi
+matchToken "fix"    = TkFix
+matchToken "let"    = TkLet
+matchToken "in"     = TkIn
+matchToken "end"    = TkEnd
 matchToken x        = if (isInt x) then TkIntLit (read x::Integer) else TkVarId x
 
 isInt :: [Char] -> Bool
@@ -129,6 +133,8 @@ buildTerm (x:xs)
   | x== TkApp = appTerm xs
   | x== TkIf  = ifTerm xs
   | x== TkLPar = ParTerm (parCase xs)
+  | x== TkFix = Fix (parCase xs)
+  | x== TkLet = letTerm xs 
   | (x== TkPlus)&&((head xs)==TkLPar) = 
     let operands = (caseHelper (parRemove xs) commaSeperated TkComma 0 [])
        in IntAdd (buildTerm (fst operands)) (buildTerm (snd operands))
@@ -170,6 +176,18 @@ appTerm xs =
 parRemove :: [Token] -> [Token]
 parRemove xs = if (((head xs)==TkLPar)&& ((last xs)==TkRPar)) 
       then (tail(init xs)) else error ("Mismatched parentheses")                     
+
+-- Helper function for the let case
+letTerm ::[Token] -> Term
+letTerm (x:xs) = 
+  let letCase = caseHelper (letFix xs) [TkLet] TkIn 0 []
+      in Let (getVar x) (buildTerm (fst letCase)) (buildTerm (snd letCase)) 
+
+-- Function checks for closing end term for let functions
+letFix :: [Token] -> [Token]
+letFix (x:xs) = if (x== TkEq)(last xs == TkEnd) then (init xs) 
+                else error ("missing end word")
+letFix _ = error ("Improper use of let expression")
 
 -- Helper function for the if case
 ifTerm ::[Token] -> Term
@@ -213,6 +231,8 @@ fv (IntDiv t1 t2)  = (fv t1)++(fv t2)
 fv (IntNand t1 t2) = (fv t1)++(fv t2)
 fv (IntEq t1 t2)   = (fv t1)++(fv t2)
 fv (IntLt t1 t2)   = (fv t1)++(fv t2)
+fv (Fix t)         = fv t
+fv (Let x t1 t2)   = (fv t1)++[y |y<-(fv t2), x/=y] 
 fv _               = []
 
 -- Checking the free variables prevents overwriting an inner abstraction 
@@ -234,6 +254,9 @@ subHelper x s (IntNand t1 t2)= IntNand (subst x s t1) (subst x s t2)
 subHelper x s (IntEq t1 t2)  = IntEq (subst x s t1) (subst x s t2)
 subHelper x s (IntLt t1 t2)  = IntLt (subst x s t1) (subst x s t2)
 subHelper x s (ParTerm t)    = ParTerm (subHelper x s t)
+subHelper x s (Fix t)        = Fix (subHelper x s t)
+subHelper x s (Let y t1 t2)  = 
+  Let (subst x s t1) (if x==y then t2 else (subst x s t2))
 subHelper _ _ z              = z
 
 isValue:: Term -> Bool
