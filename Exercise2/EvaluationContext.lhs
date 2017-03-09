@@ -5,26 +5,24 @@ data Context  =  Hole
 		|  AppT        	Context S.Term
 		|  AppV        	S.Term Context 
 		|  If          	Context S.Term S.Term
-		|  If          	S.Term Context S.Term
-		|  If          	S.Term S.Term Context
-		|  IntAdd 		Context S.Term
-		|  IntAdd 		S.Term Context
-		|  IntSub 		Context S.Term
-		|  IntSub 		S.Term Context
-		|  IntMul 		Context S.Term
-		|  IntMul 		S.Term Context
-		|  IntDiv 		Context S.Term
-		|  IntDiv 		S.Term Context
-		|  IntNand 		Context S.Term
-		|  IntNand 		S.Term Context
-		|  IntEq 		Context S.Term
-		|  IntEq 		S.Term Context
-		|  IntLt 		Context S.Term 
-		|  IntLt 		S.Term Context
-		|  ParTerm 		Context
-		|  Fix 			Context
-		|  Let 			S.Var Context S.Term
-		|  Let 			S.Var S.Term Context
+		|  IntAddT 		Context S.Term
+		|  IntAddV		S.Term Context
+		|  IntSubT 		Context S.Term
+		|  IntSubV		S.Term Context
+		|  IntMulT		Context S.Term
+		|  IntMulV 		S.Term Context
+		|  IntDivT 		Context S.Term
+		|  IntDivV 		S.Term Context
+		|  IntNandT 	Context S.Term
+		|  IntNandV 	S.Term Context
+		|  IntEqT		Context S.Term
+		|  IntEqV 		S.Term Context
+		|  IntLtT 		Context S.Term 
+		|  IntLtV 		S.Term Context
+		|  ParTerm		Context
+		|  Fix	 		Context
+		|  LetT 		S.Var Context S.Term
+		|  LetV 		S.Var S.Term Context
 
 fillWithTerm :: Context -> S.Term -> S.Term
 fillWithTerm c t = case c of
@@ -32,26 +30,24 @@ fillWithTerm c t = case c of
 		AppT c1 t2            	->  S.App (fillWithTerm c1 t) t2
 		AppV t1 c2            	->  S.App t1 (fillWithTerm c2 t)
 		If c1 t2 t3           	->  S.If (fillWithTerm c1 t) t2 t3
-		If t1 c2 t3           	->  S.If t1 (fillWithTerm c2 t) t3
-		If t1 t2 c3           	->  S.If t1 t2 (fillWithTerm c3 t)
-		IntAdd c1 t2			->  S.IntAdd (fillWithTerm c1 t) t2
-		IntAdd t1 c2			->	S.IntAdd t1 (fillWithTerm c2 t)
-		IntSub c1 t2			->	S.IntSub (fillWithTerm c1 t) t2
-		IntSub t1 c2			->	S.IntSub t1 (fillWithTerm c2 t)
-		IntMul c1 t2			->	S.IntMul (fillWithTerm c1 t) t2
-		IntMul t1 c2			->	S.IntMul t1 (fillWithTerm c2 t)
-		IntDiv c1 t2			->	S.IntDiv (fillWithTerm c1 t) t2
-		IntDiv t1 c2			->	S.IntDiv t1 (fillWithTerm c2 t)
-		IntNand c1 t2			->	S.IntNand (fillWithTerm c1 t) t2
-		IntNand t1 c2			->	S.IntNand t1 (fillWithTerm c2 t)
-		IntEq c1 t2				-> 	S.IntEq (fillWithTerm c1 t) t2
-		IntEq t1 c2				->	S.IntEq t1 (fillWithTerm c2 t)
-		IntLt c1 t2				->	S.IntLt (fillWithTerm c1 t) t2
-		IntLt t1 c2				->	S.IntLt t1 (fillWithTerm c2 t)
+		IntAddT c1 t2			->  S.IntAdd (fillWithTerm c1 t) t2
+		IntAddV t1 c2			->	S.IntAdd t1 (fillWithTerm c2 t)
+		IntSubT c1 t2			->	S.IntSub (fillWithTerm c1 t) t2
+		IntSubV t1 c2			->	S.IntSub t1 (fillWithTerm c2 t)
+		IntMulT c1 t2			->	S.IntMul (fillWithTerm c1 t) t2
+		IntMulV t1 c2			->	S.IntMul t1 (fillWithTerm c2 t)
+		IntDivT c1 t2			->	S.IntDiv (fillWithTerm c1 t) t2
+		IntDivV t1 c2			->	S.IntDiv t1 (fillWithTerm c2 t)
+		IntNandT c1 t2			->	S.IntNand (fillWithTerm c1 t) t2
+		IntNandV t1 c2			->	S.IntNand t1 (fillWithTerm c2 t)
+		IntEqT c1 t2			-> 	S.IntEq (fillWithTerm c1 t) t2
+		IntEqV t1 c2			->	S.IntEq t1 (fillWithTerm c2 t)
+		IntLtT c1 t2			->	S.IntLt (fillWithTerm c1 t) t2
+		IntLtV t1 c2			->	S.IntLt t1 (fillWithTerm c2 t)
 		ParTerm c1				-> 	S.ParTerm (fillWithTerm c1 t)
 		Fix c1					->	S.Fix (fillWithTerm c1 t)
-		Let v1 c2 t3			->	S.Let v1 (fillWithTerm c2 t) t3
-		Let v1 t2 c3			->	S.Let v1 t2 (fillWithTerm c3 t)
+		LetT v1 c2 t3			->	S.Let v1 (fillWithTerm c2 t) t3
+		LetV v1 t2 c3			->	S.Let v1 t2 (fillWithTerm c3 t)
 
 fillWithContext :: Context -> Context -> Context
 fillWithContext c c' = case c of
@@ -59,26 +55,24 @@ fillWithContext c c' = case c of
 		AppT c1 t2            	->  AppT (fillWithContext c1 c') t2
 		AppV t1 c2            	->  AppV t1 (fillWithContext c2 c')
 		If c1 t2 t3           	->  If (fillWithContext c1 c') t2 t3
-		If t1 c2 t3           	->  If t1 (fillWithContext c2 c')  t3
-		If t1 t2 c3           	->  If t1 t2 (fillWithContext c3 c')
-		IntAdd c1 t2			->  IntAdd (fillWithContext c1 c') t2
-		IntAdd t1 c2			->	IntAdd t1 (fillWithContext c2 c')
-		IntSub c1 t2			->	IntSub (fillWithContext c1 c') t2
-		IntSub t1 c2			->	IntSub t1 (fillWithContext c2 c')
-		IntMul c1 t2			->	IntMul (fillWithContext c1 c') t2
-		IntMul t1 c2			->	IntMul t1 (fillWithContext c2 c')
-		IntDiv c1 t2			->	IntDiv (fillWithContext c1 c') t2
-		IntDiv t1 c2			->	IntDiv t1 (fillWithContext c2 c')
-		IntNand c1 t2			->	IntNand (fillWithContext c1 c') t2
-		IntNand t1 c2			->	IntNand t1 (fillWithContext c2 c')
-		IntEq c1 t2				-> 	IntEq (fillWithContext c1 c') t2
-		IntEq t1 c2				->	IntEq t1 (fillWithContext c2 c')
-		IntLt c1 t2				->	IntLt (fillWithContext c1 c') t2
-		IntLt t1 c2				->	IntLt t1 (fillWithContext c2 c')
+		IntAddT c1 t2			->  IntAdd (fillWithContext c1 c') t2
+		IntAddV t1 c2			->	IntAdd t1 (fillWithContext c2 c')
+		IntSubT c1 t2			->	IntSub (fillWithContext c1 c') t2
+		IntSubV t1 c2			->	IntSub t1 (fillWithContext c2 c')
+		IntMulT c1 t2			->	IntMul (fillWithContext c1 c') t2
+		IntMulV t1 c2			->	IntMul t1 (fillWithContext c2 c')
+		IntDivT c1 t2			->	IntDiv (fillWithContext c1 c') t2
+		IntDivV t1 c2			->	IntDiv t1 (fillWithContext c2 c')
+		IntNandT c1 t2			->	IntNand (fillWithContext c1 c') t2
+		IntNandV t1 c2			->	IntNand t1 (fillWithContext c2 c')
+		IntEqT c1 t2				-> 	IntEq (fillWithContext c1 c') t2
+		IntEqV t1 c2				->	IntEq t1 (fillWithContext c2 c')
+		IntLtT c1 t2				->	IntLt (fillWithContext c1 c') t2
+		IntLtV t1 c2				->	IntLt t1 (fillWithContext c2 c')
 		ParTerm c1				-> 	ParTerm (fillWithContext c1 c')
 		Fix c1					->	Fix (fillWithContext c1 c')
-		Let v1 c2 t3			->	Let v1 (fillWithContext c2 c') t3
-		Let v1 t2 c3			->	Let v1 t2 (fillWithContext c3 c')
+		LetT v1 c2 t3			->	Let v1 (fillWithContext c2 c') t3
+		LetV v1 t2 c3			->	Let v1 t2 (fillWithContext c3 c')
 		
 \end{code}
 
