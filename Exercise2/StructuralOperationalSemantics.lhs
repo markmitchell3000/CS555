@@ -22,8 +22,7 @@ eval1 t = case t of
           in if (newT2==Nothing) then Nothing 
              else Just (S.App (S.Abs x tau11 t12) (justVal newT2))
   S.App t1 t2  
-    |  S.isValue t1 -> 
-       error ("First argument of application must be an abstraction")
+    |  S.isValue t1 -> Nothing
     |  otherwise -> let newT1 = (eval1 t1)
                        in if (newT1==Nothing) then Nothing
                             else Just (S.App (justVal newT1) t2)
@@ -34,7 +33,15 @@ eval1 t = case t of
              else Just (S.If (justVal newT1) t2 t3)
     |  t1==S.Tru -> Just t2
     |  t1==S.Fls -> Just t3
-    |  otherwise -> error("Non boolean value used for conditional statement.")
+    |  otherwise -> Nothing
+  S.Fix (S.Abs x y t1) -> Just (S.subst x (S.Fix (S.Abs x y t1)) t1)
+  S.Fix t -> if ((eval1 t) == Nothing) then Nothing 
+             else Just (S.Fix (justVal(eval1 t)))
+  S.Let x t1 t2 
+    | S.isValue t1 -> Just (S.subst x t1 t2)
+    | otherwise -> let newT1 = (eval1 t1)
+                       in if (newT1==Nothing) then Nothing
+                            else Just (S.Let x (justVal newT1) t2)
   S.IntAdd t1 t2
     |  not(S.isValue t1)  -> 
        let newT1 = (eval1 t1)
