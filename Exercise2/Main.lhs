@@ -138,6 +138,7 @@ import qualified Typing as T
 import qualified AbstractSyntax as S
 import qualified StructuralOperationalSemantics as O
 import qualified NaturalSemantics as N
+import qualified ReductionSemantics as R
 
 main = do
   args <- getArgs
@@ -157,7 +158,9 @@ main = do
   putStrLn "---Natural Semanitcs - Normal form:---"
   let newTerm2 = N.eval term
   putStrLn $ show newTerm2
-
+  putStrLn "---Natural Semanitcs - Normal form:---"
+  let newTerm3 = R.textualMachineEval term
+  putStrLn $ show newTerm3
 \end{code}
 
 \subsection{Structural operational semantics (written exercise)}
