@@ -26,10 +26,10 @@ data Context  =  Hole
 
 fillWithTerm :: Context -> S.Term -> S.Term
 fillWithTerm c t = case c of
-    Hole                  ->  t
-    AppT c1 t2              ->  S.App (fillWithTerm c1 t) t2
-    AppV t1 c2              ->  S.App t1 (fillWithTerm c2 t)
-    If c1 t2 t3             ->  S.If (fillWithTerm c1 t) t2 t3
+    Hole              ->  t
+    AppT c1 t2        ->  S.App (fillWithTerm c1 t) t2
+    AppV t1 c2        ->  S.App t1 (fillWithTerm c2 t)
+    If c1 t2 t3       ->  S.If (fillWithTerm c1 t) t2 t3
     IntAddT c1 t2     ->  S.IntAdd (fillWithTerm c1 t) t2
     IntAddV t1 c2     ->  S.IntAdd t1 (fillWithTerm c2 t)
     IntSubT c1 t2     ->  S.IntSub (fillWithTerm c1 t) t2
@@ -38,14 +38,14 @@ fillWithTerm c t = case c of
     IntMulV t1 c2     ->  S.IntMul t1 (fillWithTerm c2 t)
     IntDivT c1 t2     ->  S.IntDiv (fillWithTerm c1 t) t2
     IntDivV t1 c2     ->  S.IntDiv t1 (fillWithTerm c2 t)
-    IntNandT c1 t2      ->  S.IntNand (fillWithTerm c1 t) t2
-    IntNandV t1 c2      ->  S.IntNand t1 (fillWithTerm c2 t)
+    IntNandT c1 t2    ->  S.IntNand (fillWithTerm c1 t) t2
+    IntNandV t1 c2    ->  S.IntNand t1 (fillWithTerm c2 t)
     IntEqT c1 t2      ->  S.IntEq (fillWithTerm c1 t) t2
     IntEqV t1 c2      ->  S.IntEq t1 (fillWithTerm c2 t)
     IntLtT c1 t2      ->  S.IntLt (fillWithTerm c1 t) t2
     IntLtV t1 c2      ->  S.IntLt t1 (fillWithTerm c2 t)
     ParTerm c1        ->  S.ParTerm (fillWithTerm c1 t)
-    Fix c1          ->  S.Fix (fillWithTerm c1 t)
+    Fix c1            ->  S.Fix (fillWithTerm c1 t)
     LetT v1 c2 t3     ->  S.Let v1 (fillWithTerm c2 t) t3
     LetV v1 t2 c3     ->  S.Let v1 t2 (fillWithTerm c3 t)
 

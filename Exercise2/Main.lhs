@@ -140,6 +140,7 @@ import qualified StructuralOperationalSemantics as O
 import qualified NaturalSemantics as N
 --import qualified ReductionSemantics as R
 import qualified CCMachine as C
+import qualified SCCMachine as D
 
 main = do
   args <- getArgs
@@ -165,6 +166,9 @@ main = do
   putStrLn "---CCMachine - Normal form:---"
   let newTerm4 = C.ccMachineEval term
   putStrLn $ show newTerm4
+  putStrLn "---SCCMachine - Normal form:---"
+  let newTerm5 = D.sccMachineEval term
+  putStrLn $ show newTerm5
 \end{code}
 
 \subsection{Structural operational semantics (written exercise)}
