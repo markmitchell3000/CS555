@@ -142,7 +142,7 @@ import qualified NaturalSemantics as N
 import qualified CCMachine as C
 import qualified SCCMachine as D
 import qualified CKMachine as K
---import qualified SCCMachine as L
+import qualified CEKMachine as L
 
 main = do
   args <- getArgs
@@ -174,9 +174,9 @@ main = do
   putStrLn "---CKMachine - Normal form:---"
   let newTerm6 = K.ckMachineEval term
   putStrLn $ show newTerm6
-  --putStrLn "---CEKMachine - Normal form:---"
-  --let newTerm7 = L.cekMachineEval term
-  --putStrLn $ show newTerm7
+  putStrLn "---CEKMachine - Normal form:---"
+  let newTerm7 = L.cekMachineEval term
+  putStrLn $ show newTerm7
 \end{code}
 
 \subsection{Structural operational semantics (written exercise)}
