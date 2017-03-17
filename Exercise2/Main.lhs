@@ -63,57 +63,171 @@
 \pagestyle{myheadings}
 \title{CS555 Advanced Compilers}
 \author{Mark Mitchell, Doug Keating}
-\date{February 28, 2017}
+\date{March 26, 2017}
 
 \begin{document}
 \setcounter{section}{1}
 
 \section*{Mark Mitchell, Doug Keating}
-\section*{Exercise 1}
+\section*{Exercise 2}
 
-\subsection{Core lambda language}
+\subsection{2.1 Enriching the core lambda language}
 \label{sec:core}
 
-We implemented this project using a small core lambda language, with booleans, 
-integers and arithmetic operators.  The implementation of the concrete syntax 
-and the terminal symbols (tokens) used in the grammar can be found in the 
-AbstractSyntax code.
+We updated our parser and interpreters so that it can handle let expressions and
+general recursion using the fix operator.
+
+(Small-Step) Structural Operational Semantics Rules:
+Additional rules for let and fix have been added to the core lambda language.
+\begin{verbatim}
+Terms
+     a, b ::= \x.a | a1a2| x | c | bool | if a1 a2 a3|op(a1, a2)
+Constants
+     c ::= |-4294967296|...|-1|0|1|2|...|4294967296|
+Booleans
+     bool ::= tru|fls 
+Operators
+     op ::= +|-|*|/|NAND|==|<
+Values
+     v :: c | bool |\x.a
+
+Small step evaluation rules:
+
+  T-App1
+       a -> a'
+       ---------
+       ab -> a'b
+  T-App2
+       b -> b'
+       --------
+       vb -> vb'
+  T-Abs
+       ---------------------
+       (\x.a)v -> [x |-> v]a
+  T-If1
+       a -> a'
+       -------------------------
+       if a b1 b2 -> if a' b1 b2
+  T-IfTru
+      ---------------
+      if tru a b -> a
+  T-IfFls
+      ---------------
+      if fls a b -> b
+  T-Op1
+       a -> a'
+       -------------------
+       op(a,b) -> op(a',b)
+  T-Op2
+       b -> b'
+       -------------------
+       op(v,b) -> op(v,b')
+  T-Op3
+       ------------------- (where v = ~op(n1, n2))
+       op(c1,c2) -> v
+       * v is a bool for op's ==, < and a constant otherwise
+  T-Let1
+       a -> a'
+       -----------------------
+       Let x=a in b -> Let x=a' in b
+  T-Let2
+       ---------------------------
+       Let x=v in b -> [x |-> v] b
+  T-Fix1
+       a -> a'
+       -------------------- 
+       Fix a -> Fix a'
+  T-Fix2
+       -------------------------------------- 
+       Fix (\x.a) -> [x |-> Fix (\x.a)](\x.a)
+
+\end{verbatim}
+
+(Big-Step)Natural semantics Rules:
+These have been extended to include the let and fix cases.
+\begin{verbatim}
+Big step evaluation rules:
+   T-TermValue
+       a => v
+   T-Constant
+       c => c
+   T-Abstraction
+       \x.a => \x.a
+   T-Application
+       a => \x.a'  b => v'  [x|->v']a'=>v
+       ----------------------------------
+                     ab => v
+   T-IfTruN
+       a => tru  b1 => v
+       -----------------
+       if a b1 b2 => v
+   T-IfFlsN
+       a => fls  b2 => v
+       -----------------
+       if a b1 b2 => v
+   T-OpN
+       a1 => v1  a2 => v2  v = ~op(v1, v2)
+       -----------------------------------
+                 op(a1, a2) => v
+   T-LetN
+       a=>v' [x|-> v']b => v
+       ---------------------
+       Let x=a in b => v
+   T-FixN
+       a=>(\x.a') Fix (\x.a')=> [x |-> Fix (\x.a')](\x.a')
+       ---------------------------------------------------
+       Fix a => [x |-> Fix (\x.a')](\x.a')
+  
+\end{verbatim}
+
+Formal Typing Rules:
+These typing rules include the core lambda calculus and the extended terms let 
+and fix.
+\begin{verbatim}
+Typing rules:
+.....
+  
+\end{verbatim}
 
 %\newpage
-\subsection{Parsing}
-Here is the parser built to read this language:
+Parsing:
+This is the parser updated to read this language:
 
 %\newpage
 %include AbstractSyntax.lhs
 
 
 %\newpage
-\subsection{Binding and free variables}
-As seen above their is code to enumerate free variables, substitute terms, and 
-verify that the term has been reduced to a value.  These can be found in the 
-functions fv, subst and isValue.
-
-%\newpage
-\subsection{Structural operational semantics}
+Updated Structural operational semantics:
 This is the code used to express the small-step semantics. 
 
 %\newpage
 %include StructuralOperationalSemantics.lhs
 
+Updated Natural semantics:
+The natural semantics is very similar to the structural operational semantics 
+but instead of using single step evaluation it uses big step evaluation which 
+allows for terms to be reduced without returning the program to the root of the 
+evaluation tree.  Effectively natural semantics allow for evaluation to occur 
+nearby to where the most work has been done.  We implemented this code for 
+Natural Semantics.
+
+Source code:
 %\newpage
-\subsection{Arithmetic}
-The module |IntegerArithmetic| use the 32-bit 2's complement range, and the 
-arithmetic operations addition, subtraction, multiplication, division, NAND, 
-equality and the less than comparison of two integers.   
+%include NaturalSemantics.lhs
+
+%\newpage
+Arithmetic:
+This is the same code used in exercise 1.   
 
 Source code:
 %\newpage
 %include IntegerArithmetic.lhs
 
 %\newpage
-\subsection{Type checker}
-
-We used the provided code for type checking.
+Type checker:
+We used the provided code for type checking for the core lambda language and 
+then extended it for the let and fix operations.
 
 Source code:
 
@@ -121,7 +235,7 @@ Source code:
 %include Typing.lhs
 
 %\newpage
-\subsection{Main program}
+Main program:
 Our main program reads from a text file a string, this is sent to the parser to 
 be tokenized and converted to a term.  This term is type checked to see if the 
 entire program can be interpreted.  Then the term is sent to the small step 
@@ -179,99 +293,22 @@ main = do
   putStrLn $ show newTerm7
 \end{code}
 
-\subsection{Structural operational semantics (written exercise)}
+\subsection{2.2 Reduction Semantics}
+\label{sec:core}
+2.2.1 Evaluation Contexts:
 
-\begin{verbatim}
-Terms
-     a, b ::= \x.a | a1a2| x | c | bool | if a1 a2 a3|op(a1, a2)
-Constants
-     c ::= |-4294967296|...|-1|0|1|2|...|4294967296|
-Booleans
-     bool ::= tru|fls 
-Operators
-     op ::= +|-|*|/|NAND|==|<
-Values
-     v :: c | bool |\x.a
+2.2.2 Standard Reduction:
 
-Small step evaluation rules:
 
-  T-App1
-       a -> a'
-       ---------
-       ab -> a'b
-  T-App2
-       b -> b'
-       --------
-       vb -> vb'
-  T-Abs
-       ---------------------
-       (\x.a)v -> [x |-> v]a
-  T-If1
-       a -> a'
-       -------------------------
-       if a b1 b2 -> if a' b1 b2
-  T-IfTru
-      ---------------
-      if tru a b -> a
-  T-IfFls
-      ---------------
-      if fls a b -> b
-  T-Op1
-       a -> a'
-       -------------------
-       op(a,b) -> op(a',b)
-  T-Op2
-       b -> b'
-       -------------------
-       op(v,b) -> op(v,b')
-  T-Op3
-       ------------------- (where v = ~op(n1, n2))
-       op(c1,c2) -> v
-       * v is a bool for op's ==, < and a constant otherwise
+\subsection{2.3 Abstract register machines}
+\label{sec:core}
+2.3.1 CCMachine
 
-\end{verbatim}
+2.3.2 SCCMachine
 
-\subsection{Natural semantics (written exercise)}
-Grammar for the natural semantics is the same as the structural operational 
-semantics.
-\begin{verbatim}
-Big step evaluation rules:
-   T-TermValue
-       a => v
-   T-Constant
-       c => c
-   T-Abstraction
-       \x.a => \x.a
-   T-Application
-       a => \x.a'  b => v'  [x|->v']a'=>v
-       ----------------------------------
-                     ab => v
-   T-IfTruN
-       a => tru  b1 => v
-       -----------------
-       if a b1 b2 => v
-   T-IfFlsN
-       a => fls  b2 => v
-       -----------------
-       if a b1 b2 => v
-   T-OpN
-       a1 => v1  a2 => v2  v = ~op(v1, v2)
-       -----------------------------------
-                 op(a1, a2) => v
-  
-\end{verbatim}
+2.3.3 CKMachine
 
-\subsection{Natural semantics}
-The natural semantics is very similar to the structural operational semantics 
-but instead of using single step evaluation it uses big step evaluation which 
-allows for terms to be reduced without returning the program to the root of the 
-evaluation tree.  Effectively natural semantics allow for evaluation to occur 
-nearby to where the most work has been done.  We implemented this code for 
-Natural Semantics.
-
-Source code:
-%\newpage
-%include NaturalSemantics.lhs
+2.3.4 CEKMachine
 
 \end{document}
 
