@@ -291,10 +291,11 @@ Source code:
 Main program:
 Our main program reads from a text file a string, this is sent to the parser to 
 be tokenized and converted to a term.  This term is type checked to see if the 
-entire program can be interpreted.  Then the term is sent to the small step 
-evaluation process, following this the natural semantics code is called.  The 
-structural operation semantics and the natural semantics produced the same 
-output in all test cases. 
+entire program can be interpreted.  Then the term is sent to the updated 
+small-step and big-step evaluation modules, following this the 
+reductionSemantics, CCMachine, SCCMachine, CKMachine, and the CEKMachine are 
+called.  All of these modules produce the same term in the test cases provided 
+at the bottom. 
 
 Source code:
 
@@ -349,19 +350,40 @@ main = do
 \subsection{2.2 Reduction Semantics}
 \label{sec:core}
 2.2.1 Evaluation Contexts:
+%\newpage
+%include EvaluationContext.lhs
 
+%\newpage
 2.2.2 Standard Reduction:
+%\newpage
+%include ReductionSemantics.lhs
 
+%\newpage
 
 \subsection{2.3 Abstract register machines}
 \label{sec:core}
 2.3.1 CCMachine
+%\newpage
+%include CCMachine.lhs
 
+%\newpage
 2.3.2 SCCMachine
+%\newpage
+%include SCCMachine.lhs
 
+%\newpage
 2.3.3 CKMachine
+%\newpage
+%include CKMachine.lhs
 
+%\newpage
 2.3.4 CEKMachine
+%\newpage
+%include CEKMachine.lhs
+
+%\newpage
+\subsection{2.4 Test Cases}
+\label{sec:core}
 
 \end{document}
 
