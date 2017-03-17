@@ -184,8 +184,61 @@ Formal Typing Rules:
 These typing rules include the core lambda calculus and the extended terms let 
 and fix.
 \begin{verbatim}
+Types
+       T ::= T->T | Int | Bool
+Environments
+       e ::= [] | e, x:T 
+Constants/Integers
+     c ::= |-4294967296|...|-1|0|1|2|...|4294967296|
+OpNum
+     opN ::= +|-|*|/|Nand
+OpBool
+     opB ::= eq|lt
+
 Typing rules:
-.....
+   Type-Base
+       e |- t:T
+   Type-Var
+       x:T 'member' e
+       ------------
+       e |- x:T
+   Type-Abs
+       e, x:T |- t:T' x 'not amember' dom (e)
+       -------------------------------------
+       e |- \x:T.t : T->T'
+    Type-App
+       e |- t1: T->T',  e|- t2:T
+       ------------------------
+       e |- t1 t2 :T'
+    Type-Int
+       -----------
+       e |- c: Int
+    Type-BoolTrue
+       ---------------
+       e |- true: Bool
+    Type-BoolFalse
+       ----------------
+       e |- false: Bool
+    Type-Conditional
+       e |- t1:Bool,   e |- t2:T,  e |- t3:T
+       -----------------------------------
+       e |- if t1 then t2 else t3 : T
+    Type-OpNum
+       e |- t1:Int,  e |- t2:Int
+       ------------------------(opN is +|-|*|/|Nand)
+       e |- opN (t1, t2): Int
+    Type-OpBool
+       e |- t1:Int,  e |- t2:Int
+       ------------------------(opB is eq|lt)
+       e |- opB (t1, t2): Bool
+    Type-Let
+       e |- t1:T, e, x:T |-t2:T' x 'not a member' dom(e)
+       -------------------------------------------------
+       e |- let x=t1 in t2 :T'
+    Type-Fix
+       e |- t: T->T
+       -------------
+       e |- fix t: T    
   
 \end{verbatim}
 
