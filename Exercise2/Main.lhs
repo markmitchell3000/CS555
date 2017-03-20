@@ -294,8 +294,20 @@ be tokenized and converted to a term.  This term is type checked to see if the
 entire program can be interpreted.  Then the term is sent to the updated 
 small-step and big-step evaluation modules, following this the 
 reductionSemantics, CCMachine, SCCMachine, CKMachine, and the CEKMachine are 
-called.  All of these modules produce the same term in the test cases provided 
-at the bottom. 
+called.  The reduction semantics, CC Machine and SCC machine all use a context
+to handle reductions.  All of these modules produce the same term in the test 
+cases provided at the bottom. 
+
+The reduction semantics returns an updated term and rebuilds its context for 
+every reduction.  The CC and SCC machines carry the context along with the 
+current term to be reduced, this allows the reductions to be handled down inside
+the context tree.  However the context tree must be recursed through when it is 
+updated so that a new context will reflect the most recent reduction.  The CK 
+and CEK machines do not need to do this sort of recursive decent through the 
+program.  By using the continuation structure all reductions are effectively 
+done inside of the context of whatever structure is at the head of a list of 
+program instructions.  This is far more effective as the program can be updated 
+in constant time once a term is reduced.  
 
 Source code:
 
@@ -363,21 +375,44 @@ main = do
 \subsection{2.3 Abstract register machines}
 \label{sec:core}
 2.3.1 CCMachine
+This machine builds a context tree which is a copy of the program with a hole 
+located where the current reduction is being handled.  Once the term is reduced 
+its relative context will have further terms extracted and then reduced, and 
+the context tree is rebuilt to reflect the structure surrounding these 
+reductions.  Updating the context after a reduction is a little tricky because 
+the context tree will be almost the same one level above the current reduction, 
+inside this level a new context will be added as a child or a hole will be used 
+because the next reduction will be handled on this level or a different branch 
+of this level.   
 %\newpage
 %include CCMachine.lhs
 
 %\newpage
 2.3.2 SCCMachine
+Very similar to the CCMachine, this machine however will look at the context 
+once a term is reduced to a value in order to decide what to do next.  This 
+allows for applications and operations to be done immediately once the terms 
+needed are reduced to values.  This does the same thing as the CCMachine but it 
+combines steps which make its evaluation much simpler.    
 %\newpage
 %include SCCMachine.lhs
 
 %\newpage
 2.3.3 CKMachine
+This machine does something similar to the CC and SCC machines but this uses a 
+continuation structure rather then a context tree.  Allowing for the machine to 
+use the head of the contiuation structure when a reduction is done, instead of 
+requiring that the context tree be traversed in order for the programs state to 
+be updated. 
 %\newpage
 %include CKMachine.lhs
 
 %\newpage
 2.3.4 CEKMachine
+The CEKMachine builds upon the CKMachine by adding closure and environment this 
+allows for variables to be updated as the terms are being reduced rather than 
+calling a recursive substitution function.  The environment fuctions as a lookup 
+table that is only called when a value is required for a variable.
 %\newpage
 %include CEKMachine.lhs
 
