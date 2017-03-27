@@ -362,11 +362,33 @@ main = do
 \subsection{2.2 Reduction Semantics}
 \label{sec:core}
 2.2.1 Evaluation Contexts:
+
+The following code was used to implement evaluation contexts:
+
 %\newpage
 %include EvaluationContext.lhs
 
 %\newpage
 2.2.2 Standard Reduction:
+
+When forming the evaluation contexts, if a term is a redex, then it should
+be the next thing reduced.  Otherwise the first subterm that is not a value
+should be searched for a redex.  In our implementation this is accomplished 
+by returning the evaluation context (Term, E.Hole) if the term is a redexe. 
+Otherwise, the first non-value subterm is passed to a helper function that uses 
+makeEvalContext and E.fillWithContext to recursively search for a redex within
+ that subterm to reduce. makeContractum is responsible for reducing the redex once
+ it is found.
+ 
+ 
+The textual machine recursively evaluates a term, splitting it into an evaluation
+ context and a subterm.  If this subterm is a redex, it is reduced to obtain 
+ a contractum, and the evaluation context is filled with this contractum. This 
+ machine is inherently inefficient, since it essentially returns to the root of 
+ the tree and then searches for the location of the next redex.  This does not 
+ provide  any means of localization that could enhance efficiency.
+
+ 
 %\newpage
 %include ReductionSemantics.lhs
 
