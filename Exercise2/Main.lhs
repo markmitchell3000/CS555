@@ -419,7 +419,159 @@ table that is only called when a value is required for a variable.
 %\newpage
 \subsection{2.4 Test Cases}
 \label{sec:core}
+\begin{verbatim}
+Test Case 1:
 
+---Input:---
+let
+  iseven =
+    let
+      mod = abs (m:Int. abs (n:Int. -(m,*(n,/(m,n)))))
+    in
+      abs (k:Int. =(0, app(app(mod,k),2)))
+    end
+in
+  app (iseven, 7)
+end
+---Term:---
+let iseven = let mod = abs(m:Int.abs(n:Int.-(m,*(n,/(m,n))))) in abs(k:Int.=
+(0,app(app(mod,k),2))) end in app(iseven,7)
+end
+---Type:---
+Bool
+---Structural Semanitcs - Normal form:---
+false
+---Natural Semanitcs - Normal form:---
+false
+---Reduction Semantics - Normal form:---
+false
+---CCMachine - Normal form:---
+false
+---SCCMachine - Normal form:---
+false
+---CKMachine - Normal form:---
+false
+---CEKMachine - Normal form:---
+false
+
+Test Case 2:
+
+---Input:---
+app (fix (abs (ie:->(Int,Bool). abs (x:Int. if =(0,x) then true else
+if =(0, -(x,1)) then false else app (ie, -(x,2)) fi fi))), 7)
+---Term:---
+app(fix abs(ie:->(Int,Bool).abs(x:Int.if =(0,x) then true else if =(0,-(x,1)) 
+then false else app(ie,-(x,2)) fi fi)),7)
+---Type:---
+Bool
+---Structural Semanitcs - Normal form:---
+false
+---Natural Semanitcs - Normal form:---
+false
+---Reduction Semantics - Normal form:---
+false
+---CCMachine - Normal form:---
+false
+---SCCMachine - Normal form:---
+false
+---CKMachine - Normal form:---
+false
+---CEKMachine - Normal form:---
+false
+
+Test Case 3:
+
+---Input:---
+app (app (fix (abs (e:->(Int,->(Int,Int)). abs (x:Int. abs (y: Int.
+if =(0,y) then 1 else *(x,app(app(e,x),-(y,1))) fi)))), 2), 3)
+---Term:---
+app(app(fix abs(e:->(Int,->(Int,Int)).abs(x:Int.abs(y:Int.if =(0,y) then 1 else 
+*(x,app(app(e,x),-(y,1))) fi))),2),3)
+---Type:---
+Int
+---Structural Semanitcs - Normal form:---
+8
+---Natural Semanitcs - Normal form:---
+8
+---Reduction Semantics - Normal form:---
+8
+---CCMachine - Normal form:---
+8
+---SCCMachine - Normal form:---
+8
+---CKMachine - Normal form:---
+8
+---CEKMachine - Normal form:---
+8
+
+Test Case 4:
+
+---Input:---
+app (fix (abs (f:->(Int,Int). abs (x: Int. if =(0,x) then 1 else
+*(x, app(f, -(x,1))) fi))), app (fix (abs (f:->(Int,Int).
+abs (x: Int. if =(0,x) then 1 else *(x, app(f, -(x,1))) fi))), 3))
+---Term:---
+app(fix abs(f:->(Int,Int).abs(x:Int.if =(0,x) then 1 else *(x,app(f,-(x,1))) 
+fi)),app(fix abs(f:->(Int,Int).abs(x:Int.if
+ =(0,x) then 1 else *(x,app(f,-(x,1))) fi)),3))
+---Type:---
+Int
+---Structural Semanitcs - Normal form:---
+720
+---Natural Semanitcs - Normal form:---
+720
+---Reduction Semantics - Normal form:---
+720
+---CCMachine - Normal form:---
+720
+---SCCMachine - Normal form:---
+720
+---CKMachine - Normal form:---
+720
+---CEKMachine - Normal form:---
+720
+
+Test Case 5:
+
+---Input:---
+let
+   iseven = fix (abs (ie:->(Int,Bool). abs (x:Int.
+              if =(0,x) then true else
+                if =(1,x) then false else
+                  app (ie, -(x,2)) fi fi)))
+in
+  let
+    collatz = fix (abs (collatz:->(Int,Int). abs (x: Int.
+                if app (iseven, x) then app (collatz, /(x,2)) else
+                  if =(x,1) then 1 else
+                    app (collatz, +(*(3,x),1)) fi fi)))
+  in
+    app (collatz, 1000)
+  end
+end
+---Term:---
+let iseven = fix abs(ie:->(Int,Bool).abs(x:Int.if =(0,x) then true else if 
+=(1,x) then false else app(ie,-(x,2)) fi fi))
+ in let collatz = fix abs(collatz:->(Int,Int).abs(x:Int.if app(iseven,x) then 
+ app(collatz,/(x,2)) else if =(x,1) then 1
+else app(collatz,+(*(3,x),1)) fi fi)) in app(collatz,1000) end end
+---Type:---
+Int
+---Structural Semanitcs - Normal form:---
+1
+---Natural Semanitcs - Normal form:---
+1
+---Reduction Semantics - Normal form:---
+1
+---CCMachine - Normal form:---
+1
+---SCCMachine - Normal form:---
+1
+---CKMachine - Normal form:---
+1
+---CEKMachine - Normal form:---
+1
+\end{verbatim}
 \end{document}
 
 
