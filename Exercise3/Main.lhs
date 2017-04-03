@@ -324,6 +324,7 @@ import qualified SCCMachine as D
 import qualified CKMachine as K
 import qualified CEKMachine as L
 import qualified DeBruijn as DB
+import qualified NaturalSemanticsWithEnvironmentsClosuresAndDeBruijnIndices as NB
 
 main = do
   args <- getArgs
@@ -361,6 +362,9 @@ main = do
   putStrLn "---De Bruijn Notation:---"
   let dBTerm = DB.toDeBruijn term
   putStrLn $ show dBTerm
+  putStrLn ("---Natural semantics using DeBruijn Terms:---")
+  let dbTerm1 = NB.eval dBTerm
+  putStrLn $ show dbTerm1
 
 \end{code}
 
