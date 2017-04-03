@@ -1,0 +1,15 @@
+let
+   iseven = fix (abs (ie:->(Int,Bool). abs (x:Int.
+              if =(0,x) then true else 
+                if =(1,x) then false else
+                  app (ie, -(x,2)) fi fi)))
+in
+  let
+    collatz = fix (abs (collatz:->(Int,Int). abs (x: Int.
+                if app (iseven, x) then app (collatz, /(x,2)) else
+                  if =(x,1) then 1 else 
+                    app (collatz, +(*(3,x),1)) fi fi)))
+  in
+    app (collatz, 1000)
+  end
+end

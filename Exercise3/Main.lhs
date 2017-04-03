@@ -323,6 +323,7 @@ import qualified CCMachine as C
 import qualified SCCMachine as D
 import qualified CKMachine as K
 import qualified CEKMachine as L
+import qualified DeBruijn as DB
 
 main = do
   args <- getArgs
@@ -357,6 +358,10 @@ main = do
   putStrLn "---CEKMachine - Normal form:---"
   let newTerm7 = L.cekMachineEval term
   putStrLn $ show newTerm7
+  putStrLn "---De Bruijn Notation:---"
+  let dBTerm = DB.toDeBruijn term
+  putStrLn $ show dBTerm
+
 \end{code}
 
 \subsection{2.2 Reduction Semantics}

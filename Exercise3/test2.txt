@@ -1,0 +1,2 @@
+app (fix (abs (ie:->(Int,Bool). abs (x:Int. if =(0,x) then true else 
+if =(0, -(x,1)) then false else app (ie, -(x,2)) fi fi))), 7)

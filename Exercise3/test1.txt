@@ -1,0 +1,10 @@
+let
+  iseven =
+    let
+      mod = abs (m:Int. abs (n:Int. -(m,*(n,/(m,n)))))
+    in
+      abs (k:Int. =(0, app(app(mod,k),2)))
+    end
+in
+  app (iseven, 7)
+end

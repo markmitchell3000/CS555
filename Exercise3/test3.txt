@@ -1,0 +1,2 @@
+app (app (fix (abs (e:->(Int,->(Int,Int)). abs (x:Int. abs (y: Int.
+if =(0,y) then 1 else *(x,app(app(e,x),-(y,1))) fi)))), 2), 3)
