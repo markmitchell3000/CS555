@@ -367,8 +367,12 @@ main = do
   let dbTerm1 = Z.eval dBTerm
   putStrLn $ show dbTerm1
   putStrLn ("---Continuation Passing Style (CPS):---")
-  let cpsTerm = CP.makeCPS term
+  let cpsTerm = CP.toCPS exprType term
+  let cpsTerm' = O.eval (S.App cpsTerm (S.Abs "a" 
+                          (S.TypeArrow exprType exprType) (S.Var "a")))
   putStrLn $ show cpsTerm
+  putStrLn ("---Evaluation of CPS using Small Step Semantics:---")
+  putStrLn $ show cpsTerm'
 
 \end{code}
 
