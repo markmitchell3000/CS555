@@ -58,8 +58,8 @@ toCPS answerType t = case t of
                          pairT = cpsPair answerType t
                         in S.Abs k (S.TypeArrow answerType answerType)
                                  (S.App (fst pairT) (S.Abs v1 S.TypeInt 
-                                  (S.App (snd pairT) 
-                                    (S.App (S.Var k) (cpsOp x v1 v2)))))
+                                  (S.App (snd pairT) (S.Abs v2 S.TypeInt
+                                    (S.App (S.Var k) (cpsOp x v1 v2))))))
 
 cpsPair:: S.Type -> S.Term -> (S.Term, S.Term) 
 cpsPair ty t = case t of
