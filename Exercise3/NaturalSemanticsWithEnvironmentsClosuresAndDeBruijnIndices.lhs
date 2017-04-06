@@ -33,7 +33,7 @@ evalInEnv e t = case t of
                                otherwise-> Just (Clo (S.App a t2) e)
                            otherwise-> Just(Clo t e)
   S.Fix t1          -> case (evalInEnv e t1) of
-                           Just (Clo a@(S.Abs _ t1') e') 
+                           Just (Clo (S.Abs _ t1') e') 
                              -> evalInEnv ((Clo t e'):e) t1'
                            otherwise -> Just(Clo t e)
   S.Let t1 t2       -> case (evalInEnv e t1) of
