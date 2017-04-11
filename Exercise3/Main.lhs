@@ -325,7 +325,9 @@ import qualified CKMachine as K
 import qualified CEKMachine as L
 import qualified DeBruijn as DB
 import qualified NaturalSemanticsWithEnvironmentsClosuresAndDeBruijnIndices as Z
+--import qualified CESMachine as CES
 import qualified CPS as CP
+import qualified CE3RMachine as CR
 
 main = do
   args <- getArgs
@@ -368,11 +370,12 @@ main = do
   putStrLn $ show dbTerm1
   putStrLn ("---Continuation Passing Style (CPS):---")
   let cpsTerm = CP.toCPS exprType term
-  let cpsTerm' = O.eval (S.App cpsTerm (S.Abs "a" 
-                          (S.TypeArrow exprType exprType) (S.Var "a")))
+  --let cpsTerm' = O.eval (S.App cpsTerm (S.Abs "a" 
+  --                        (S.TypeArrow exprType exprType) (S.Var "a")))
   putStrLn $ show cpsTerm
   putStrLn ("---Evaluation of CPS using Small Step Semantics:---")
-  putStrLn $ show cpsTerm'
+  let ce3rTerm = CR.eval(DB.toDeBruijn cpsTerm)
+  putStrLn $ show ce3rTerm
 
 \end{code}
 

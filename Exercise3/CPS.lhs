@@ -18,6 +18,22 @@ toCPS answerType t = case t of
                        in let k = checkFreeVars (S.fv t1') "k"
                              in S.Abs k answerType (S.App (S.Var k) 
                                                     (S.Abs x tau t1'))
+  S.App(S.Fix (S.Abs x tau1 (S.Abs y tau2 t1))) t2  ->  
+    let k  = checkFreeVars (S.fv t1) "k"
+        v1 = checkFreeVars (S.fv t1) "v1"
+        v2 = checkFreeVars (S.fv t2) "v2"
+        in (S.Abs k answerType 
+            (S.App 
+             (S.Abs v1 answerType 
+              (S.App (toCPS answerType t2)  
+               (S.Abs v2 answerType 
+                (S.App 
+                 (S.App (S.Var v1) (S.Var v2)) (S.Var k))
+                )
+               )
+              )(S.Fix (S.Abs x tau1 (S.Abs y tau2 (toCPS answerType t1))))
+             )
+            )
   S.App t1 t2    -> let t1' = toCPS answerType t1
                         t2' = toCPS answerType t2
                        in let k  = checkFreeVars ((S.fv t1)++(S.fv t2)) "k"
@@ -53,19 +69,7 @@ toCPS answerType t = case t of
                                          (S.App (S.Var k)
                                           (S.If (S.Var v1) (S.Var v2) 
                                            (S.Var v3)))))))))
-  S.Fix t1        -> 
-    case (toCPS answerType t1) of   
-      --(S.Abs k ty (S.App _ t1')) -> S.Abs k ty 
-      --                               (S.App t1' 
-      --                                (S.Abs v1 answerType 
-      --                                  (S.App (S.Fix (S.Var v1))(S.Var k) )))
-      --                               where v1 = checkFreeVars (S.fv t1) "v1"
-      x                          -> S.Abs k1 answerType 
-                                     (S.App x 
-                                      (S.Abs v1 answerType 
-                                       (S.App (S.Fix (S.Var v1))(S.Var k1))))
-                                     where k1 = checkFreeVars (S.fv x) "k"
-                                           v1 = checkFreeVars (S.fv x) "v1"
+
   S.Let x t1 t2   -> toCPS answerType (S.App (S.Abs x answerType t2) t1)
   S.ParTerm t1    -> toCPS answerType t1
   x               -> let k = checkFreeVars (S.fv t) "k"
