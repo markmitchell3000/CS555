@@ -6,14 +6,10 @@ import qualified Typing as T
 toCPS::S.Type -> S.Term -> S.Term
 toCPS answerType t = case t of
   S.Var x        -> let k = if (x=="k") then "k`" else "k"
-                       in S.Abs k (S.TypeArrow answerType answerType) 
-                                  (S.App (S.Var k) t)
-  S.Tru          -> S.Abs "k" (S.TypeArrow S.TypeBool answerType) 
-                              (S.App (S.Var "k") t)
-  S.Fls          -> S.Abs "k" (S.TypeArrow S.TypeBool answerType) 
-                              (S.App (S.Var "k") t)
-  S.IntConst x   -> S.Abs "k" (S.TypeArrow S.TypeInt answerType) 
-                              (S.App (S.Var "k") t)
+                       in S.Abs k answerType(S.App (S.Var k) t)
+  S.Tru          -> S.Abs "k" answerType(S.App (S.Var "k") t)
+  S.Fls          -> S.Abs "k" answerType(S.App (S.Var "k") t)
+  S.IntConst x   -> S.Abs "k" answerType(S.App (S.Var "k") t)
   S.Abs x tau t1 -> let t1' =  toCPS answerType t1
                        in let k = checkFreeVars (S.fv t1') "k"
                              in S.Abs k answerType (S.App (S.Var k) 
@@ -58,10 +54,9 @@ toCPS answerType t = case t of
                                    ((S.fv t1)++(S.fv t2)++(S.fv t3)) "v2"
                               v3= checkFreeVars 
                                    ((S.fv t1)++(S.fv t2)++(S.fv t3)) "v3"
-                             in S.Abs k (S.TypeArrow answerType answerType)
+                             in S.Abs k answerType
                                   (S.App t1'
-                                   (S.Abs v1 
-                                    (S.TypeArrow answerType S.TypeBool) 
+                                   (S.Abs v1 answerType 
                                      (S.App t2' 
                                       (S.Abs v2 answerType 
                                        (S.App t3'
@@ -76,7 +71,7 @@ toCPS answerType t = case t of
                          v1= checkFreeVars (S.fv t) "v1"
                          v2= checkFreeVars (S.fv t) "v2"
                          pairT = cpsPair answerType t
-                        in S.Abs k (S.TypeArrow answerType answerType)
+                        in S.Abs k answerType 
                                  (S.App (fst pairT) (S.Abs v1 S.TypeInt 
                                   (S.App (snd pairT) (S.Abs v2 S.TypeInt
                                     (S.App (S.Var k) (cpsOp x v1 v2))))))

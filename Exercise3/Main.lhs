@@ -63,184 +63,25 @@
 \pagestyle{myheadings}
 \title{CS555 Advanced Compilers}
 \author{Mark Mitchell, Doug Keating}
-\date{March 26, 2017}
+\date{April 20, 2017}
 
 \begin{document}
 \setcounter{section}{1}
 
 \section*{Mark Mitchell, Doug Keating}
-\section*{Exercise 2}
+\section*{Exercise 3}
 
-\subsection{2.1 Enriching the core lambda language}
+\subsection{3.1 De Bruijn Notation}
 \label{sec:core}
 
-We updated our parser and interpreters so that it can handle let expressions and
-general recursion using the fix operator.
+De Bruijn notation is exactly the same as our previous notation byt with one key
+difference, all variable names are changed to integers that represent indices.  
+This index tells where to get the variable value form a list of values.  If the 
+variable is bound to the innermost lambda expression the variable will get its 
+value from the head of the list or index 0.  If the variable is a free variable 
+in the innermost lambda expression then the index will be used to find this 
+value in the list, the more lambda nested the variable, the higher the index.  
 
-(Small-Step) Structural Operational Semantics Rules:
-Additional rules for let and fix have been added to the core lambda language.
-\begin{verbatim}
-Terms
-     a, b ::= \x.a | a1a2| x | c | bool | if a1 a2 a3|op(a1, a2)
-Constants
-     c ::= |-4294967296|...|-1|0|1|2|...|4294967296|
-Booleans
-     bool ::= tru|fls 
-Operators
-     op ::= +|-|*|/|NAND|==|<
-Values
-     v :: c | bool |\x.a
-
-Small step evaluation rules:
-
-  T-App1
-       a -> a'
-       ---------
-       ab -> a'b
-  T-App2
-       b -> b'
-       --------
-       vb -> vb'
-  T-Abs
-       ---------------------
-       (\x.a)v -> [x |-> v]a
-  T-If1
-       a -> a'
-       -------------------------
-       if a b1 b2 -> if a' b1 b2
-  T-IfTru
-      ---------------
-      if tru a b -> a
-  T-IfFls
-      ---------------
-      if fls a b -> b
-  T-Op1
-       a -> a'
-       -------------------
-       op(a,b) -> op(a',b)
-  T-Op2
-       b -> b'
-       -------------------
-       op(v,b) -> op(v,b')
-  T-Op3
-       ------------------- (where v = ~op(n1, n2))
-       op(c1,c2) -> v
-       * v is a bool for op's ==, < and a constant otherwise
-  T-Let1
-       a -> a'
-       -----------------------
-       Let x=a in b -> Let x=a' in b
-  T-Let2
-       ---------------------------
-       Let x=v in b -> [x |-> v] b
-  T-Fix1
-       a -> a'
-       -------------------- 
-       Fix a -> Fix a'
-  T-Fix2
-       -------------------------------------- 
-       Fix (\x.a) -> [x |-> Fix (\x.a)](\x.a)
-
-\end{verbatim}
-
-(Big-Step)Natural semantics Rules:
-These have been extended to include the let and fix cases.
-\begin{verbatim}
-Big step evaluation rules:
-   T-TermValue
-       a => v
-   T-Constant
-       c => c
-   T-Abstraction
-       \x.a => \x.a
-   T-Application
-       a => \x.a'  b => v'  [x|->v']a'=>v
-       ----------------------------------
-                     ab => v
-   T-IfTruN
-       a => tru  b1 => v
-       -----------------
-       if a b1 b2 => v
-   T-IfFlsN
-       a => fls  b2 => v
-       -----------------
-       if a b1 b2 => v
-   T-OpN
-       a1 => v1  a2 => v2  v = ~op(v1, v2)
-       -----------------------------------
-                 op(a1, a2) => v
-   T-LetN
-       a=>v' [x|-> v']b => v
-       ---------------------
-       Let x=a in b => v
-   T-FixN
-       a=>(\x.a') Fix (\x.a')=> [x |-> Fix (\x.a')](\x.a')
-       ---------------------------------------------------
-       Fix a => [x |-> Fix (\x.a')](\x.a')
-  
-\end{verbatim}
-
-Formal Typing Rules:
-These typing rules include the core lambda calculus and the extended terms let 
-and fix.
-\begin{verbatim}
-Types
-       T ::= T->T | Int | Bool
-Environments
-       e ::= [] | e, x:T 
-Constants/Integers
-     c ::= |-4294967296|...|-1|0|1|2|...|4294967296|
-OpNum
-     opN ::= +|-|*|/|Nand
-OpBool
-     opB ::= eq|lt
-
-Typing rules:
-   Type-Base
-       e |- t:T
-   Type-Var
-       x:T 'member' e
-       ------------
-       e |- x:T
-   Type-Abs
-       e, x:T |- t:T' x 'not amember' dom (e)
-       -------------------------------------
-       e |- \x:T.t : T->T'
-    Type-App
-       e |- t1: T->T',  e|- t2:T
-       ------------------------
-       e |- t1 t2 :T'
-    Type-Int
-       -----------
-       e |- c: Int
-    Type-BoolTrue
-       ---------------
-       e |- true: Bool
-    Type-BoolFalse
-       ----------------
-       e |- false: Bool
-    Type-Conditional
-       e |- t1:Bool,   e |- t2:T,  e |- t3:T
-       -----------------------------------
-       e |- if t1 then t2 else t3 : T
-    Type-OpNum
-       e |- t1:Int,  e |- t2:Int
-       ------------------------(opN is +|-|*|/|Nand)
-       e |- opN (t1, t2): Int
-    Type-OpBool
-       e |- t1:Int,  e |- t2:Int
-       ------------------------(opB is eq|lt)
-       e |- opB (t1, t2): Bool
-    Type-Let
-       e |- t1:T, e, x:T |-t2:T' x 'not a member' dom(e)
-       -------------------------------------------------
-       e |- let x=t1 in t2 :T'
-    Type-Fix
-       e |- t: T->T
-       -------------
-       e |- fix t: T    
-  
-\end{verbatim}
 
 %\newpage
 Parsing:
@@ -369,12 +210,10 @@ main = do
   let dbTerm1 = Z.eval dBTerm
   putStrLn $ show dbTerm1
   putStrLn ("---Continuation Passing Style (CPS):---")
-  let cpsTerm = CP.toCPS exprType term
-  --let cpsTerm' = O.eval (S.App cpsTerm (S.Abs "a" 
-  --                        (S.TypeArrow exprType exprType) (S.Var "a")))
+  let cpsTerm = S.App (CP.toCPS exprType term) (S.Abs "a" exprType (S.Var "a"))
   putStrLn $ show cpsTerm
   putStrLn ("---Evaluation of CPS using Small Step Semantics:---")
-  let ce3rTerm = CR.eval(DB.toDeBruijn cpsTerm)
+  let ce3rTerm = CR.eval (DB.toDeBruijn cpsTerm)
   putStrLn $ show ce3rTerm
 
 \end{code}

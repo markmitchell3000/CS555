@@ -39,7 +39,7 @@ compile t = case t of
     S.Var n             ->  [Access n]
     S.IntConst          ->  [Int n]
     S.Tru               ->  [Bool True]
-    S.False             ->  [Bool False]
+    S.Fls             ->  [Bool False]
     --
     S.IntAdd  t1 t2     ->  (compile t1) ++ (compile t2) ++ [Add]
     S.IntSub  t1 t2     ->  (compile t1) ++ (compile t2) ++ [Sub]
