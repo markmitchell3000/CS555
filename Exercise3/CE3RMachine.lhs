@@ -57,21 +57,14 @@ compile t = case t of
 
 step::State -> Maybe State
 step state = case state of 
-  ((Int 1 x):c,e,(v1,v2,v3))      -> Just (c,e,(IntVal x, v2, v3))
-  ((Int 2 x):c,e,(v1,v2,v3))      -> Just (c,e,(v1, IntVal x, v3))
-  ((Int 3 x):c,e,(v1,v2,v3))      -> Just (c,e,(v1, v2, IntVal x))
-
-  ((Bool 1 x):c,e,(v1,v2,v3))     -> Just (c,e,(BoolVal x, v2, v3))
-  ((Bool 2 x):c,e,(v1,v2,v3))     -> Just (c,e,(v1, BoolVal x, v3))
-  ((Bool 3 x):c,e,(v1,v2,v3))     -> Just (c,e,(v1, v2, BoolVal x))
-
-  ((Access 1 x):c,e,(v1,v2,v3))   -> Just (c,e,(e !! x, v2, v3))
-  ((Access 2 x):c,e,(v1,v2,v3))   -> Just (c,e,(v1, e !! x, v3))
-  ((Access 3 x):c,e,(v1,v2,v3))   -> Just (c,e,(v1, v2, e !! x))
-
-  ((Close 1 x):c,e,(v1,v2,v3))    -> Just (c,e,((Clo x e), v2, v3))
-  ((Close 2 x):c,e,(v1,v2,v3))    -> Just (c,e,(v1, (Clo x e), v3))
-  ((Close 3 x):c,e,(v1,v2,v3))    -> Just (c,e,(v1, v2, (Clo x e)))
+\end{code}
+The code for Int, Bool, Access and Close each simply put a value on one of three 
+registers.
+\begin{code}
+  ((Int i x):c,e,regs)            -> Just (c,e,(getReg (IntVal x) i regs))
+  ((Bool i x):c,e,regs)           -> Just (c,e,(getReg (BoolVal x) i regs))
+  ((Access i x):c,e,regs)         -> Just (c,e,(getReg (e !! x) i regs))
+  ((Close i x):c,e,regs)          -> Just (c,e,(getReg (Clo x e) i regs)
 
   (Apply1:c,e,((Clo c1 e1),v2,v3))-> Just (c1,v2:e1,(Empty,Empty,Empty))
   (Apply2:c,e,((Clo c1 e1),v2,v3))-> Just (c1,v3:v2:e1,(Empty,Empty,Empty))
@@ -93,6 +86,11 @@ step state = case state of
   (Lt:c,e,((Clo c1 e1),IntVal v2, IntVal v3))   -> 
     Just(c1,(BoolVal (I.intLt v2 v3)):e1, (Empty, Empty, Empty)) 
   otherwise                       -> Nothing
+
+getReg:: Value -> Int -> Registers -> Registers
+getReg v' 1 (v1, v2, v3) -> (v',v2,v3)
+getReg v' 2 (v1, v2, v3) -> (v1,v',v3)
+getReg v' 3 (v1, v2, v3) -> (v1,v2,v')
 
 toCode:: Integer -> D.Term -> Code
 toCode i t = case t of
