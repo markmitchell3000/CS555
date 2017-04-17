@@ -36,6 +36,12 @@ data Slot = Value Value | Code Code | Env Env
 type Stack = [Slot]
 type State = (Code, Env, Stack)
 
+\end{code}
+CES stands for code, environment, stack.  Intermediate code is created from the 
+debruijin term given.  The environment is used to track free variables just as 
+it was in the nameless natural semantics.  The stack is used to store the 
+continuation of the program, similar to the CEK machine.
+\begin{code}
 
 compile::S.Term ->  Code
 compile t = case t of
@@ -44,7 +50,6 @@ compile t = case t of
     S.IntConst n        ->  [Int n]
     S.Tru               ->  [Bool True]
     S.Fls               ->  [Bool False]
-    --
     S.IntAdd  t1 t2     ->  (compile t1) ++ (compile t2) ++ [Op Add]
     S.IntSub  t1 t2     ->  (compile t1) ++ (compile t2) ++ [Op Sub]
     S.IntMul  t1 t2     ->  (compile t1) ++ (compile t2) ++ [Op Mul]
@@ -101,7 +106,7 @@ value is only relevant inside the let expression.
 \end{code}
 The code that is inside the fix expression is brought up to the top closure to
 be run/evaluated and the (fix t) expression is put onto the stack to be used 
-again should another recursion occur.  The previous enviroment will need to 
+again should another recursion occur.  The previous environment will need to 
 remove the local environment used during the last run of the recursion.  
 Otherwise the Debruijn index values would point to incorrect values.
 \begin{code}

@@ -91,7 +91,8 @@ application.
 \begin{code}
   (If:c,e,(BoolVal t1,t2,t3))     -> if t1 then Just (c,e,(Empty,t2,Empty))
                                      else Just (c,e,(Empty,t3,Empty))
-  (Fix:c,e,((Clo c1 e1),(Clo((Close _ c2):c3) e2),v3)) -> Just (c,e,((Clo c1 e1),(Clo (c2 ++ c3) ((CloFix (Close 2 ((Close 2 c2:c3)):[Fix])):(fixRemove e))), Empty))
+  --(Fix:c,e,((Clo c1 e1),(Clo((Close _ c2):c3) e2),v3)) -> 
+  --  Just (c,e,((Clo c1 e1),(Clo (c2 ++ c3) ((CloFix (Close 2 ((Close 2 c2:c3)):[Fix])):(fixRemove e))), Empty))
   ((Op o):c,e,((Clo c1 e1),IntVal v2, IntVal v3))  -> 
     Just(c1,(opHelp o v2 v3):e1, (Empty, Empty, Empty))
   otherwise                       -> Nothing

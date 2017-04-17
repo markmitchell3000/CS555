@@ -16,46 +16,6 @@ toCPS answerType t = case t of
                                                     (S.Abs x tau t1'))
   S.Fix t1       -> case (S.Fix (toCPS answerType t1)) of
                       f@(S.Fix (S.Abs k tau t1')) -> S.Abs k tau (S.App t1' f)
-  --S.Fix t1 -> let aT = answerType
-  --                x  = checkFV (S.fv t1) "x"
-  --                f  = checkFV (S.fv t1) "f"
-  --                v  = checkFV (S.fv t1) "v"
-  --                t1'= toCPS aT t1
-  --                f1'= toCPS aT (S.Abs f aT 
-  --                               (S.App 
-  --                                (S.Abs x aT 
-  --                                 (S.App (S.Var f)(S.Abs v aT 
-  --                                  (S.App (S.App (S.Var x)(S.Var x)) (S.Var v)))))
-  --                                (S.Abs x aT 
-  --                                 (S.App (S.Var f)(S.Abs v aT 
-  --                                  (S.App (S.App (S.Var x)(S.Var x)) (S.Var v)))))))
-  --                in S.Abs x aT (S.App (S.App t1' (S.App 
-  --                   f1' t1')) (S.Var x))  
-                  --in S.Abs x aT (S.App (S.App t1' (S.App 
-                  --   (S.Abs f aT 
-                  --    (S.App 
-                  --     (S.Abs x aT 
-                  --      (S.App (S.Var f)(S.Abs v aT 
-                  --          (S.App (S.App (S.Var x)(S.Var x)) (S.Var v)))))
-                  --     (S.Abs x aT 
-                  --      (S.App (S.Var f)(S.Abs v aT 
-                  --          (S.App (S.App (S.Var x)(S.Var x)) (S.Var v))))))
-                  --    ) t1')) (S.Var x))
-    --let aT = answerType
-    --    f  = checkFV (S.fv t1) "f"
-    --    x  = checkFV (S.fv t1) "x"
-    --    v  = checkFV (S.fv t1) "v"
-    --    k  = checkFV (S.fv t1) "k"
-    --    in toCPS aT (S.App 
-    --                 (S.Abs f aT 
-    --                  (S.App 
-    --                   (S.Abs x aT 
-    --                    (S.App (S.Var f)(S.Abs v aT 
-    --                        (S.App (S.App (S.Var x)(S.Var x)) (S.Var v)))))
-    --                   (S.Abs x aT 
-    --                    (S.App (S.Var f)(S.Abs v aT 
-    --                        (S.App (S.App (S.Var x)(S.Var x)) (S.Var v))))))
-    --                  ) t1)
   S.App t1 t2    -> let t1' = toCPS answerType t1
                         t2' = toCPS answerType t2
                        in let k  = checkFV ((S.fv t1)++(S.fv t2)) "k"
@@ -87,34 +47,6 @@ toCPS answerType t = case t of
                                 (S.Abs k1 aT (S.App  (S.Var k1) t2'))
                                 (S.Abs k1 aT (S.App  (S.Var k1) t3')) )
                                       )))   
-                        --in S.Abs k aT
-                        --    (S.App t1'
-                        --     (S.Abs v1 aT
-                        --      (S.App
-                        --       (S.Var k)
-                        --        (S.If (S.Var v1) 
-                        --         (S.Abs v2 aT (S.App t2' (S.Var v2)  ))
-                        --           (S.Abs v2 aT(S.App t3' (S.Var v2)  ))) 
-                        --              )))   
-                        --in S.Abs k answerType
-                        --    (S.App t1'
-                        --     (S.Abs v1 answerType 
-                        --      (S.App t2' 
-                        --       (S.Abs v2 answerType 
-                        --        (S.App t3'
-                        --         (S.Abs v3 answerType 
-                        --          (S.App (S.Var k)
-                        --           (S.If (S.Var v1)(S.Var v2)(S.Var v3)))))))))                    
-                             --in S.Abs k answerType
-                             --     (S.App t1'
-                             --      (S.Abs v1 answerType 
-                             --        (S.App t2' 
-                             --         (S.Abs v2 answerType 
-                             --          (S.App t3'
-                             --           (S.Abs v3 answerType 
-                             --            (S.App (S.Var k)
-                             --             (S.If (S.Var v1) (S.Var v2) 
-                             --              (S.Var v3)))))))))
   S.Let x t1 t2   -> toCPS answerType (S.App (S.Abs x answerType t2) t1)
   S.ParTerm t1    -> toCPS answerType t1
   x               -> let k = checkFV (S.fv t) "k"
