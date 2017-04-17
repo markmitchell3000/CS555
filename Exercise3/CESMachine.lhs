@@ -5,13 +5,7 @@ import qualified IntegerArithmetic as I
 
 data Inst = Int Integer
           | Bool Bool
-          | Add
-          | Sub
-          | Mul
-          | Div
-          | Nand
-          | Eq
-          | Lt
+          | Op Op
           | Access Int
           | Close Code
           | Let
@@ -22,6 +16,14 @@ data Inst = Int Integer
           | Fix
           deriving (Show, Eq)
 
+data Op = Add
+        | Sub
+        | Mul
+        | Div
+        | Nand
+        | Eq
+        | Lt
+        deriving (Show, Eq)
           
 type Code = [Inst]
 data Value = BoolVal Bool 
@@ -43,13 +45,13 @@ compile t = case t of
     S.Tru               ->  [Bool True]
     S.Fls               ->  [Bool False]
     --
-    S.IntAdd  t1 t2     ->  (compile t1) ++ (compile t2) ++ [Add]
-    S.IntSub  t1 t2     ->  (compile t1) ++ (compile t2) ++ [Sub]
-    S.IntMul  t1 t2     ->  (compile t1) ++ (compile t2) ++ [Mul]
-    S.IntDiv  t1 t2     ->  (compile t1) ++ (compile t2) ++ [Div]
-    S.IntNand t1 t2     ->  (compile t1) ++ (compile t2) ++ [Nand]
-    S.IntEq   t1 t2     ->  (compile t1) ++ (compile t2) ++ [Eq]
-    S.IntLt   t1 t2     ->  (compile t1) ++ (compile t2) ++ [Lt]
+    S.IntAdd  t1 t2     ->  (compile t1) ++ (compile t2) ++ [Op Add]
+    S.IntSub  t1 t2     ->  (compile t1) ++ (compile t2) ++ [Op Sub]
+    S.IntMul  t1 t2     ->  (compile t1) ++ (compile t2) ++ [Op Mul]
+    S.IntDiv  t1 t2     ->  (compile t1) ++ (compile t2) ++ [Op Div]
+    S.IntNand t1 t2     ->  (compile t1) ++ (compile t2) ++ [Op Nand]
+    S.IntEq   t1 t2     ->  (compile t1) ++ (compile t2) ++ [Op Eq]
+    S.IntLt   t1 t2     ->  (compile t1) ++ (compile t2) ++ [Op Lt]
     --
     S.Abs     t1 t'     ->  [Close ((compile t') ++ [Return])]
     S.App     t1 t2     ->  (compile t1) ++ (compile t2) ++ [Apply]
@@ -68,20 +70,19 @@ step state = case state of
     if v then Just (c2, e2, (Code c):(Env e):s)
     else Just (c3, e3, (Code c):(Env e):s)
   -- Ops
-  (Add:c,e, Value (IntVal v1) : Value (IntVal v2) : s)    ->  
-    Just(c,e, Value (IntVal (I.intAdd v1 v2)):s)
-  (Sub:c,e, Value (IntVal v1) : Value (IntVal v2) : s)    ->  
-    Just(c,e, Value (IntVal (I.intSub v1 v2)):s)
-  (Mul:c,e, Value (IntVal v1) : Value (IntVal v2) : s)    ->  
-    Just(c,e, Value (IntVal (I.intMul v1 v2)):s)
-  (Div:c,e, Value (IntVal v1) : Value (IntVal v2) : s)    ->  
-    Just(c,e, Value (IntVal (I.intDiv v1 v2)):s)
-  (Nand:c,e, Value (IntVal v1) : Value (IntVal v2) : s)   ->  
-    Just(c,e, Value (IntVal (I.intNand v1 v2)):s)
-  (Eq:c,e, Value (IntVal v1) : Value (IntVal v2) : s)     ->  
-    Just(c,e, Value (BoolVal (I.intEq v1 v2)):s)
-  (Lt:c,e, Value (IntVal v1) : Value (IntVal v2) : s)     ->  
-    Just(c,e, Value (BoolVal (I.intLt v1 v2)):s)
+  ((Op o):c,e, (Value v1): (Value v2):s)    ->  Just(c,e, (opHelp o v1 v2):s)
+  --(Sub:c,e, Value (IntVal v1) : Value (IntVal v2) : s)    ->  
+  --  Just(c,e, Value (IntVal (I.intSub v1 v2)):s)
+  --(Mul:c,e, Value (IntVal v1) : Value (IntVal v2) : s)    ->  
+  --  Just(c,e, Value (IntVal (I.intMul v1 v2)):s)
+  --(Div:c,e, Value (IntVal v1) : Value (IntVal v2) : s)    ->  
+  --  Just(c,e, Value (IntVal (I.intDiv v1 v2)):s)
+  --(Nand:c,e, Value (IntVal v1) : Value (IntVal v2) : s)   ->  
+  --  Just(c,e, Value (IntVal (I.intNand v1 v2)):s)
+  --(Eq:c,e, Value (IntVal v1) : Value (IntVal v2) : s)     ->  
+  --  Just(c,e, Value (BoolVal (I.intEq v1 v2)):s)
+  --(Lt:c,e, Value (IntVal v1) : Value (IntVal v2) : s)     ->  
+  --  Just(c,e, Value (BoolVal (I.intLt v1 v2)):s)
   --
   (Return:c, e, v:(Code c'):(Env e'):s)       ->  Just (c', e', v:s)
   (Apply:c,e,Value v : Value (Clo c' e') : s) -> 
@@ -91,6 +92,16 @@ step state = case state of
   (EndLet:c,v:e,s)     -> Just(c,e,s)
   (Close c':c,e,s)     -> Just (c, e, (Value (Clo c' e)):s)
   otherwise            -> Nothing 
+
+opHelp:: Op -> Value -> Value -> Slot
+opHelp o (IntVal v1) (IntVal v2) = case o of
+  Add -> Value (IntVal (I.intAdd v1 v2))
+  Sub -> Value (IntVal (I.intSub v1 v2))
+  Mul -> Value (IntVal (I.intMul v1 v2))
+  Div -> Value (IntVal (I.intDiv v1 v2))
+  Nand-> Value (IntVal (I.intNand v1 v2))
+  Eq  -> Value (BoolVal (I.intEq v1 v2))
+  Lt  -> Value (BoolVal (I.intLt v1 v2))
 
 loop:: State -> State
 loop state = case step state of
