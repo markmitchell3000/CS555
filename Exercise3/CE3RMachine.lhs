@@ -44,7 +44,7 @@ compile t = case t of
   D.App t1 (D.IntNand t2 t3)->(fillReg t1 t2 t3) ++ [Op Nand]
   D.App t1 (D.IntEq t2 t3)  ->(fillReg t1 t2 t3) ++ [Op Eq]  
   D.App t1 (D.IntLt t2 t3)  ->(fillReg t1 t2 t3) ++ [Op Lt]
-  D.App t1 (D.Fix t2)       ->(getCode 1 t1) ++ (getCode 2 t2) ++[Fix]++ [Apply1]    
+  D.App t1 (D.Fix t2)       ->(getCode 1 t1) ++ (getCode 2 t2) ++[Fix]++[Apply1]    
   D.App t1 t2               ->(getCode 1 t1) ++ (getCode 2 t2) ++ [Apply1]  
   otherwise                 ->(getCode 1 t)  
 
@@ -59,7 +59,8 @@ getCode i t = case t of
     D.IntConst x         -> [Int i x]
     D.Abs _ (D.Abs _ t1) -> [Close i (compile t1)]
     D.Abs _ t1           -> [Close i (compile t1)]
-    _                    -> error "incorrect term in getCode"
+    D.App _ _            -> [Close i (compile t)]
+    _                    -> error ("incorrect term in getCode"++ (show t))
 
 step::State -> Maybe State
 step state = case state of 
@@ -72,8 +73,8 @@ registers.
   ((Access i x):c,e,regs)         -> Just (c,e,(getReg (e !! x) i regs))
   ((Close i x):c,e,regs)          -> Just (c,e,(getReg (Clo x e) i regs))
 \end{code}
-Apply1 - will do a single application so the value on register 2 is placed at the 
-head of the environment, or index 0.
+Apply1 - will do a single application so the value on register 2 is placed at 
+the head of the environment, or index 0.
 Apply2 - will do 2 applications so the inner most abstraction will return an 
 abstraction which means that the value on register 2 will be for the free 
 variable in the abstraction produced because of this we know that the debrujin 
@@ -90,9 +91,20 @@ application.
 \begin{code}
   (If:c,e,(BoolVal t1,t2,t3))     -> if t1 then Just (c,e,(Empty,t2,Empty))
                                      else Just (c,e,(Empty,t3,Empty))
+  (Fix:c,e,((Clo c1 e1),(Clo((Close _ c2):c3) e2),v3)) -> Just (c,e,((Clo c1 e1),(Clo (c2 ++ c3) ((CloFix (Close 2 ((Close 2 c2:c3)):[Fix])):(fixRemove e))), Empty))
   ((Op o):c,e,((Clo c1 e1),IntVal v2, IntVal v3))  -> 
     Just(c1,(opHelp o v2 v3):e1, (Empty, Empty, Empty))
   otherwise                       -> Nothing
+
+fixRemove:: Env-> Env
+fixRemove e = let e' = reverse e
+                 in take (fixRemoveHelper e' 0) e'
+
+fixRemoveHelper:: Env -> Int -> Int
+fixRemoveHelper []     n = n
+fixRemoveHelper (e:es) n = case e of
+  (CloFix _) -> n
+  otherwise  -> fixRemoveHelper es (n+1)
 
 \end{code}
 All binary ops take two values and produce a single value, these values come 

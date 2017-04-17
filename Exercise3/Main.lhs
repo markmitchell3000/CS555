@@ -166,7 +166,7 @@ import qualified CKMachine as K
 import qualified CEKMachine as L
 import qualified DeBruijn as DB
 import qualified NaturalSemanticsWithEnvironmentsClosuresAndDeBruijnIndices as Z
---import qualified CESMachine as CES
+import qualified CESMachine as CES
 import qualified CPS as CP
 import qualified CE3RMachine as CR
 
@@ -209,10 +209,16 @@ main = do
   putStrLn ("---Natural semantics using DeBruijn Terms:---")
   let dbTerm1 = Z.eval dBTerm
   putStrLn $ show dbTerm1
+  putStrLn ("---CESMachine - Normal form:---")
+  let newTerm8 = CES.eval dBTerm
+  putStrLn $ show newTerm8
   putStrLn ("---Continuation Passing Style (CPS):---")
   let cpsTerm = S.App (CP.toCPS exprType term) (S.Abs "a" exprType (S.Var "a"))
   putStrLn $ show cpsTerm
-  putStrLn ("---Evaluation of CPS using Small Step Semantics:---")
+  --putStrLn ("---Evaluation of CPS using Small Step Semantics:---")
+  --let smTerm = O.eval (cpsTerm)
+  --putStrLn $ show smTerm
+  putStrLn ("---Evaluation of CPS using CE3R Small Step Semantics:---")
   let ce3rTerm = CR.eval (DB.toDeBruijn cpsTerm)
   putStrLn $ show ce3rTerm
 
