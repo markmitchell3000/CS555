@@ -66,6 +66,10 @@ evaluation, this ensure we have a lazy if statement.
     
 step::State -> Maybe State
 step state = case state of 
+\end{code}
+When a closure of containing the fix term as below is accessed then this code is
+added so it can be evaluated.  Otherwise the value is added to the stack. 
+\begin{code}
   ((Access n):c,e,s)  ->  case e !! n of
     (Clo t@(Close ((Close c1:c2)):[Fix]) []) -> Just (t++c, e, s)
     v -> Just(c,e, Value v:s)
@@ -77,13 +81,30 @@ step state = case state of
   -- Ops
   ((Op o):c,e, (Value v2): (Value v1):s)      ->  Just(c,e, (opHelp o v1 v2):s)
   --
-  (Return:c, e, v:(Code c'):(Env e'):s)       ->  Just (c', e', v:s)
+\end{code}
+When we come out of a redex we need to discard the local environment of that 
+redex, the Return code handles this step. 
+\begin{code} 
+  (Return:c, e, v:(Code c1):(Env e1):s)       ->  Just (c1, e1, v:s)
   (Apply:c,e,(Value v) : (Value (Clo c' e')) : s) -> 
     Just(c',v:e', (Code c):(Env e):s)
   --
   (Let:c,e, Value v:s) -> Just(c,v:e,s)
+\end{code}
+When we reach the EndLet code we remove the head of our enviroment which was the
+value of our let expression.  We can now discard this, because the scope of this
+value is only relevant inside the let expression.
+\begin{code}  
   (EndLet:c,v:e,s)     -> Just(c,e,s)
+  -- 
   ((Close c1):c,e,s)   -> Just (c, e, (Value (Clo c1 e)):s)
+\end{code}
+The code that is inside the fix expression is brought up to the top closure to
+be run/evaluated and the (fix t) expression is put onto the stack to be used 
+again should another recursion occur.  The previous enviroment will need to 
+remove the local environment used during the last run of the recursion.  
+Otherwise the Debruijn index values would point to incorrect values.
+\begin{code}
   (Fix:c, e, (Value (Clo (Close c1:c2) e1)) : s)        ->
     let fClo = (Clo (Close ((Close c1:c2)):[Fix]) [])
        in Just (c, e, (Value (Clo (c1++c2) (fClo:(fixRemove e fClo)))) : s)
