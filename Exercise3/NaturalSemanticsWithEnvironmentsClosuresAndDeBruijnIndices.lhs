@@ -13,8 +13,8 @@ type Env = [Value]
 \end{code}
 This is very similar to the previous Natural semantics but our values now 
 uses closures in place of abstractions.  This allows us to carry variable values
-in our enviroment rather than calling a substitution function.  Since this uses
-DeBruijn terms rather then variable names we can use these as indexs of the 
+in our environment rather than calling a substitution function.  Since this uses
+DeBruijn terms rather than variable names we can use these as indices of the 
 environment to locate the values of our variables.  
 \begin{code}
 
@@ -44,8 +44,8 @@ evalInEnv e t = case t of
 Fix t will be put inside a closure and added to the environment the term inside 
 the abstraction t.  The term t itself should be looking for the fix function and 
 then whatever values it requires.  For this reason we need to look inside the 
-abstraction to evaluate the term, and then if it requires a recusive call it may 
-call the closure with fix t.
+abstraction to evaluate the term, and then if it requires a recursive call it 
+may call the closure with fix t.
 \begin{code}                           
   S.Fix t1          -> case (evalInEnv e t1) of
                            Just (Clo (S.Abs _ t1') e') 
