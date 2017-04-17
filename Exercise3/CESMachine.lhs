@@ -57,40 +57,36 @@ compile t = case t of
     S.App     t1 t2     ->  (compile t1) ++ (compile t2) ++ [Apply]
     S.Let     t1 t2     ->  (compile t1) ++ [Let] ++ (compile t2) ++ [EndLet]
     S.Fix     t1        ->  (compile t1) ++ [Fix]
+\end{code}
+For the if case term t2 and t3 are placed inside of closures to postpone 
+evaluation, this ensure we have a lazy if statement.
+\begin{code}
     S.If      t1 t2 t3  ->  (compile t1) ++ [Close ((compile t2) ++ [Return])] 
                              ++ [Close ((compile t3) ++ [Return])] ++ [If]
     
 step::State -> Maybe State
 step state = case state of 
-  --
-  ((Access n):c,e,s)  ->  Just(c,e, Value (e!!n):s)
-  ((Int n):c,e,s)     ->  Just(c,e, Value (IntVal n):s)
-  ((Bool b):c,e,s)    ->  Just(c,e, Value (BoolVal b):s)
+  ((Access n):c,e,s)  ->  case e !! n of
+    (Clo t@(Close ((Close c1:c2)):[Fix]) []) -> Just (t++c, e, s)
+    v -> Just(c,e, Value v:s)
+  ((Int n):c,e,s)     ->  Just(c,e, (Value (IntVal n)):s)
+  ((Bool b):c,e,s)    ->  Just(c,e, (Value (BoolVal b)):s)
   (If:c, e, (Value (Clo c3 e3)):(Value (Clo c2 e2)):(Value (BoolVal v)):s)  ->
     if v then Just (c2, e2, (Code c):(Env e):s)
-    else Just (c3, e3, (Code c):(Env e):s)
+         else Just (c3, e3, (Code c):(Env e):s)
   -- Ops
-  ((Op o):c,e, (Value v1): (Value v2):s)    ->  Just(c,e, (opHelp o v1 v2):s)
-  --(Sub:c,e, Value (IntVal v1) : Value (IntVal v2) : s)    ->  
-  --  Just(c,e, Value (IntVal (I.intSub v1 v2)):s)
-  --(Mul:c,e, Value (IntVal v1) : Value (IntVal v2) : s)    ->  
-  --  Just(c,e, Value (IntVal (I.intMul v1 v2)):s)
-  --(Div:c,e, Value (IntVal v1) : Value (IntVal v2) : s)    ->  
-  --  Just(c,e, Value (IntVal (I.intDiv v1 v2)):s)
-  --(Nand:c,e, Value (IntVal v1) : Value (IntVal v2) : s)   ->  
-  --  Just(c,e, Value (IntVal (I.intNand v1 v2)):s)
-  --(Eq:c,e, Value (IntVal v1) : Value (IntVal v2) : s)     ->  
-  --  Just(c,e, Value (BoolVal (I.intEq v1 v2)):s)
-  --(Lt:c,e, Value (IntVal v1) : Value (IntVal v2) : s)     ->  
-  --  Just(c,e, Value (BoolVal (I.intLt v1 v2)):s)
+  ((Op o):c,e, (Value v2): (Value v1):s)      ->  Just(c,e, (opHelp o v1 v2):s)
   --
   (Return:c, e, v:(Code c'):(Env e'):s)       ->  Just (c', e', v:s)
-  (Apply:c,e,Value v : Value (Clo c' e') : s) -> 
-    Just(c',v:e',Code c : Env e : s)
+  (Apply:c,e,(Value v) : (Value (Clo c' e')) : s) -> 
+    Just(c',v:e', (Code c):(Env e):s)
   --
   (Let:c,e, Value v:s) -> Just(c,v:e,s)
   (EndLet:c,v:e,s)     -> Just(c,e,s)
-  (Close c':c,e,s)     -> Just (c, e, (Value (Clo c' e)):s)
+  ((Close c1):c,e,s)   -> Just (c, e, (Value (Clo c1 e)):s)
+  (Fix:c, e, (Value (Clo (Close c1:c2) e1)) : s)        ->
+    let fClo = ((Clo (Close ((Close c1:c2)):[Fix]) []):(fixRemove e))
+       in Just (c, e, (Value (Clo (c1++c2) fClo)) : s)
   otherwise            -> Nothing 
 
 opHelp:: Op -> Value -> Value -> Slot
@@ -102,6 +98,16 @@ opHelp o (IntVal v1) (IntVal v2) = case o of
   Nand-> Value (IntVal (I.intNand v1 v2))
   Eq  -> Value (BoolVal (I.intEq v1 v2))
   Lt  -> Value (BoolVal (I.intLt v1 v2))
+
+fixRemove:: Env-> Env
+fixRemove e = let e' = reverse e
+                 in take (fixRemoveHelper e' 0) e'
+
+fixRemoveHelper:: Env -> Int -> Int
+fixRemoveHelper []     n = n
+fixRemoveHelper (e:es) n = case e of
+  (Clo (Close ((Close c':c'')):[Fix]) []) -> n
+  otherwise  -> fixRemoveHelper es (n+1)
 
 loop:: State -> State
 loop state = case step state of
