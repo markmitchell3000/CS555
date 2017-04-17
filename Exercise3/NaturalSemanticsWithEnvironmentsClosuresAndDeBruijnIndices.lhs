@@ -10,6 +10,14 @@ data Value = BoolVal Bool| IntVal Integer| Clo S.Term Env
 
 type Env = [Value]
 
+\end{code}
+This is very similar to the previous Natural semantics but our values now 
+uses closures in place of abstractions.  This allows us to carry variable values
+in our enviroment rather than calling a substitution function.  Since this uses
+DeBruijn terms rather then variable names we can use these as indexs of the 
+environment to locate the values of our variables.  
+\begin{code}
+
 evalInEnv::Env -> S.Term -> Maybe Value
 evalInEnv e t = case t of
   S.Tru             -> Just(BoolVal True)
@@ -32,6 +40,13 @@ evalInEnv e t = case t of
                                Just t2' -> evalInEnv (t2':e') t1' 
                                otherwise-> Just (Clo (S.App a t2) e)
                            otherwise-> Just(Clo t e)
+\end{code}
+Fix t will be put inside a closure and added to the environment the term inside 
+the abstraction t.  The term t itself should be looking for the fix function and 
+then whatever values it requires.  For this reason we need to look inside the 
+abstraction to evaluate the term, and then if it requires a recusive call it may 
+call the closure with fix t.
+\begin{code}                           
   S.Fix t1          -> case (evalInEnv e t1) of
                            Just (Clo (S.Abs _ t1') e') 
                              -> evalInEnv ((Clo t e'):e) t1'
