@@ -85,8 +85,8 @@ step state = case state of
   (EndLet:c,v:e,s)     -> Just(c,e,s)
   ((Close c1):c,e,s)   -> Just (c, e, (Value (Clo c1 e)):s)
   (Fix:c, e, (Value (Clo (Close c1:c2) e1)) : s)        ->
-    let fClo = ((Clo (Close ((Close c1:c2)):[Fix]) []):(fixRemove e))
-       in Just (c, e, (Value (Clo (c1++c2) fClo)) : s)
+    let fClo = (Clo (Close ((Close c1:c2)):[Fix]) [])
+       in Just (c, e, (Value (Clo (c1++c2) (fClo:(fixRemove e fClo)))) : s)
   otherwise            -> Nothing 
 
 opHelp:: Op -> Value -> Value -> Slot
@@ -99,15 +99,13 @@ opHelp o (IntVal v1) (IntVal v2) = case o of
   Eq  -> Value (BoolVal (I.intEq v1 v2))
   Lt  -> Value (BoolVal (I.intLt v1 v2))
 
-fixRemove:: Env-> Env
-fixRemove e = let e' = reverse e
-                 in take (fixRemoveHelper e' 0) e'
+fixRemove:: Env->Value-> Env
+fixRemove e fClo= let e' = reverse e
+                 in take (fixRemoveHelper e' fClo 0) e'
 
-fixRemoveHelper:: Env -> Int -> Int
-fixRemoveHelper []     n = n
-fixRemoveHelper (e:es) n = case e of
-  (Clo (Close ((Close c':c'')):[Fix]) []) -> n
-  otherwise  -> fixRemoveHelper es (n+1)
+fixRemoveHelper:: Env -> Value -> Int -> Int
+fixRemoveHelper []  _  n = n
+fixRemoveHelper (e:es) v n = if(e==v) then n else fixRemoveHelper es v (n+1)
 
 loop:: State -> State
 loop state = case step state of
