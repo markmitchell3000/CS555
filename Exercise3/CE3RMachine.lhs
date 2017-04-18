@@ -26,7 +26,6 @@ type Code = [Inst]
 data Value = BoolVal Bool 
            | IntVal Integer 
            | Clo Code Env 
-           | CloFix Code 
            | Empty 
            deriving (Show, Eq)
 type Env = [Value]
@@ -70,7 +69,11 @@ registers.
 \begin{code}
   ((Int i x):c,e,regs)            -> Just (c,e,(getReg (IntVal x) i regs))
   ((Bool i x):c,e,regs)           -> Just (c,e,(getReg (BoolVal x) i regs))
-  ((Access i x):c,e,regs)         -> Just (c,e,(getReg (e !! x) i regs))
+  --
+  ((Access i x):c,e,regs)         -> case e!!x of
+    (Clo t@(Close 2 ((Close 2 c1:c2)):[Fix]) []) -> Just (t++c, e, regs)
+    v                                            -> Just (c,e,(getReg v i regs))
+  --
   ((Close i x):c,e,regs)          -> Just (c,e,(getReg (Clo x e) i regs))
 \end{code}
 Apply1 - will do a single application so the value on register 2 is placed at 
@@ -91,21 +94,22 @@ application.
 \begin{code}
   (If:c,e,(BoolVal t1,t2,t3))     -> if t1 then Just (c,e,(Empty,t2,Empty))
                                      else Just (c,e,(Empty,t3,Empty))
+  (Fix:c, e, (c1'@(Clo c1 e1) ,(Clo((Close _ c2):c3) e2), v3))        ->
+    let fClo = (Clo (Close 2 ((Close 2 c1:c2)):[Fix]) [])
+       in Just (c, e, (c1', (Clo (c2++c3)(fClo:(fixRemove e fClo))),v3))
   --(Fix:c,e,((Clo c1 e1),(Clo((Close _ c2):c3) e2),v3)) -> 
   --  Just (c,e,((Clo c1 e1),(Clo (c2 ++ c3) ((CloFix (Close 2 ((Close 2 c2:c3)):[Fix])):(fixRemove e))), Empty))
   ((Op o):c,e,((Clo c1 e1),IntVal v2, IntVal v3))  -> 
     Just(c1,(opHelp o v2 v3):e1, (Empty, Empty, Empty))
   otherwise                       -> Nothing
 
-fixRemove:: Env-> Env
-fixRemove e = let e' = reverse e
-                 in take (fixRemoveHelper e' 0) e'
+fixRemove:: Env->Value-> Env
+fixRemove e fClo= let e' = reverse e
+                 in take (fixRemoveHelper e' fClo 0) e'
 
-fixRemoveHelper:: Env -> Int -> Int
-fixRemoveHelper []     n = n
-fixRemoveHelper (e:es) n = case e of
-  (CloFix _) -> n
-  otherwise  -> fixRemoveHelper es (n+1)
+fixRemoveHelper:: Env -> Value -> Int -> Int
+fixRemoveHelper []  _  n = n
+fixRemoveHelper (e:es) v n = if(e==v) then n else fixRemoveHelper es v (n+1)
 
 \end{code}
 All binary ops take two values and produce a single value, these values come 

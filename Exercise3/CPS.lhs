@@ -14,8 +14,21 @@ toCPS answerType t = case t of
                        in let k = checkFV (S.fv t1') "k"
                              in S.Abs k answerType (S.App (S.Var k) 
                                                     (S.Abs x tau t1'))
-  S.Fix t1       -> case (S.Fix (toCPS answerType t1)) of
-                      f@(S.Fix (S.Abs k tau t1')) -> S.Abs k tau (S.App t1' f)
+  S.Fix (S.Abs f _ (S.Abs x _ t1))  -> 
+    let aT = answerType
+        t1'= toCPS aT t1
+        k = checkFV (S.fv t1) "k"
+        v1 = checkFV (S.fv t1) "v1"
+        v2 = checkFV (S.fv t1) "v2"
+        in (S.Abs k aT
+            (S.App (S.Abs f aT (S.Abs x  aT t1'))
+             (S.Abs v1 aT 
+              (S.App (S.Fix ((S.Abs f aT (S.Abs x  aT t1'))))  
+               (S.Abs v2 aT 
+                (S.App 
+                 (S.App (S.Var v1) (S.Var v2)) (S.Var k))))))) 
+  --a (S.Fix (toCPS answerType t1)) of
+  --                    f@(S.Fix (S.Abs k tau t1')) -> S.Abs k tau (S.App t1' f)
   S.App t1 t2    -> let t1' = toCPS answerType t1
                         t2' = toCPS answerType t2
                        in let k  = checkFV ((S.fv t1)++(S.fv t2)) "k"
