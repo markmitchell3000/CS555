@@ -105,7 +105,7 @@ value is only relevant inside the let expression.
   ((Close c1):c,e,s)   -> Just (c, e, (Value (Clo c1 e)):s)
 \end{code}
 The code that is inside the fix expression is brought up to the top closure to
-be run/evaluated and the (fix t) expression is put onto the stack to be used 
+be evaluated and the (fix t) expression is put onto the stack to be used 
 again should another recursion occur.  The previous environment will need to 
 remove the local environment used during the last run of the recursion.  
 Otherwise the Debruijn index values would point to incorrect values.
