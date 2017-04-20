@@ -181,6 +181,9 @@ main = do
   putStrLn ("---Continuation Passing Style (CPS):---")
   let cpsTerm = S.App (CP.toCPS exprType term) (S.Abs "a" exprType (S.Var "a"))
   putStrLn $ show cpsTerm
+  putStrLn ("---Evaluation of CPS using Operational Semantics:---")
+  let opTerm = O.eval cpsTerm
+  putStrLn $ show opTerm
   putStrLn ("---Evaluation of CPS using CE3R Small Step Semantics:---")
   let ce3rTerm = CR.eval (DB.toDeBruijn cpsTerm)
   putStrLn $ show ce3rTerm
