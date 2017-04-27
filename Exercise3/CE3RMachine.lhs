@@ -14,7 +14,6 @@ data Inst = Int Integer Integer
           | Apply2
           | Return
           | If
-          | LetFix
           | Fix
           deriving (Show, Eq)
 data Op = Add
@@ -47,8 +46,8 @@ compile t = case t of
   D.App t1 (D.IntNand t2 t3)->(fillReg t1 t2 t3) ++ [Op Nand]
   D.App t1 (D.IntEq t2 t3)  ->(fillReg t1 t2 t3) ++ [Op Eq]  
   D.App t1 (D.IntLt t2 t3)  ->(fillReg t1 t2 t3) ++ [Op Lt]
-  D.Let (D.Fix t1) t2       ->(getCode 1 t1)++[LetFix]++[Let]++(getCode 2 t2)++[EndLet]
-  D.App t1 (D.Fix t2)       ->(getCode 1 t1) ++ (getCode 2 t2) ++[Fix]++[Apply1]    
+  D.Let t1 t2               ->(getCode 1 t1)++[Let]++(getCode 2 t2)++[EndLet]
+  --D.App t1 (D.Fix t2)       ->(getCode 1 t1) ++ (getCode 2 t2) ++[Fix]++[Apply1]    
   D.App t1 t2               ->(getCode 1 t1) ++ (getCode 2 t2) ++ [Apply1]  
   otherwise                 ->(getCode 1 t)  
 
@@ -65,7 +64,7 @@ getCode i t = case t of
     D.Abs _ t1           -> [Close i (compile t1)]
     D.App _ _            -> [Close i (compile t)]
     D.Let _ _            -> [Close i (compile t)]
-    D.Fix t1             -> (getCode i t1) ++[Fix]
+    D.Fix t1             -> [Close i [Close 2 ((getCode 2 t1)++[Fix])]]
     D.If t1 t2 t3        -> (fillReg t1 t2 t3)++[If]
     _                    -> error ("incorrect term in getCode"++ (show t))
 
@@ -97,20 +96,19 @@ value in this case will be 1 rather than 0.
   (Let:c,e, r@(v,_,_)) -> Just(c,v:e,r)
   (EndLet:c,v:e,r)     -> Just(c,e,r)
 \end{code}
-Since if statements are wrapped in applications we know that the next part of 
-our code will ask for the value produced by the if statement in orderLet apply it 
-to an abstraction, for this reason the value should be put on register 2 and
-later the abstraction will be put onto register 1, then the code will call for 
-application.
+In order for our if to be lazy in cps our then and else terms will be 
+abstractions looking for a continuation.  This translates to the if statement 
+placing a closure on register 1 that will be applied to the continuation to be 
+placed on register 2.
 \begin{code}
   (If:c,e,(BoolVal t1,t2,t3))     -> if t1 then Just (c,e,(t2,Empty,Empty))
                                      else Just (c,e,(t3,Empty,Empty))
   (Fix:c, e, (c1'@(Clo c1 e1) ,(Clo((Close _ c2):c3) e2), v3))        ->
     let fClo = (Clo (Close 2 ((Close 2 c1:c2)):[Fix]) [])
        in Just (c, e, (c1', (Clo (c2++c3)(fClo:(fixRemove e fClo))),v3))
-  (LetFix:c, e,((Clo((Close _ c1):c2) e1), v2, v3)) ->
-    let fClo = (Clo (Close 2 ((Close 2 c1:c2)):[Fix]) [])
-       in Just (c, e, ((Clo (c1++c2) (fClo:(fixRemove e fClo))), v2, v3))
+  --(LetFix:c, e,((Clo((Close _ c1):c2) e1), v2, v3)) ->
+  --  let fClo = (Clo (Close 2 ((Close 2 c1:c2)):[Fix]) [])
+  --     in Just (c, e, ((Clo (c1++c2) (fClo:(fixRemove e fClo))), v2, v3))
     --  (Fix:c, e, (Value (Clo (Close c1:c2) e1)) : s)        ->
     --let fClo = (Clo (Close ((Close c1:c2)):[Fix]) [])
     --   in Just (c, e, (Value (Clo (c1++c2) (fClo:(fixRemove e fClo)))) : s)
