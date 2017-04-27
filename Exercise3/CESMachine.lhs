@@ -127,7 +127,7 @@ opHelp o (IntVal v1) (IntVal v2) = case o of
 
 fixRemove:: Env->Value-> Env
 fixRemove e fClo= let e' = reverse e
-                 in take (fixRemoveHelper e' fClo 0) e'
+                 in reverse(take (fixRemoveHelper e' fClo 0) e')
 
 fixRemoveHelper:: Env -> Value -> Int -> Int
 fixRemoveHelper []  _  n = n

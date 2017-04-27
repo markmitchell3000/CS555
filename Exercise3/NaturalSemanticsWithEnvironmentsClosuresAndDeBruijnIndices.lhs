@@ -28,8 +28,7 @@ evalInEnv e t = case t of
                            Just(BoolVal True) -> evalInEnv e t2
                            Just(BoolVal False)-> evalInEnv e t3
                            otherwise          -> Just(Clo t e)
-  S.Var i           -> if((length e)>i) 
-                       then case (e!!i) of
+  S.Var i           -> case (e!!i) of
                          (Clo t' e') -> evalInEnv e' t'
                          x           -> Just x
                        else Just(Clo t e)
