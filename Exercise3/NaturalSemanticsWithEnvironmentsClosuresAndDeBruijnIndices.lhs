@@ -31,7 +31,6 @@ evalInEnv e t = case t of
   S.Var i           -> case (e!!i) of
                          (Clo t' e') -> evalInEnv e' t'
                          x           -> Just x
-                       else Just(Clo t e)
   S.Abs ty t1       -> Just(Clo t e)
   S.App t1 t2       -> case (evalInEnv e t1) of
                            Just (Clo a@(S.Abs _ t1') e') -> 

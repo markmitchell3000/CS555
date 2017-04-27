@@ -8,10 +8,13 @@ data Inst = Int Integer Integer
           | Op Op
           | Access Integer Int
           | Close Integer Code
+          | Let
+          | EndLet
           | Apply1
           | Apply2
           | Return
           | If
+          | LetFix
           | Fix
           deriving (Show, Eq)
 data Op = Add
@@ -34,7 +37,8 @@ type State = (Code, Env, Registers)
 
 compile::D.Term ->  Code
 compile t = case t of
-  D.App k (D.If t1 t2 t3)   ->(fillReg t1 t2 t3)++[If]++(getCode 1 k)++[Apply1]
+  D.App (D.If t1 t2 t3) k   -> (fillReg t1 t2 t3)++[If]++(getCode 2 k)++[Apply1]
+  --D.App k (D.If t1 t2 t3)   ->(fillReg t1 t2 t3)++[If]++(getCode 1 k)++[Apply1]
   D.App (D.App t1 t2) t3    ->(fillReg t1 t2 t3) ++ [Apply2]
   D.App t1 (D.IntAdd t2 t3) ->(fillReg t1 t2 t3) ++ [Op Add]
   D.App t1 (D.IntSub t2 t3) ->(fillReg t1 t2 t3) ++ [Op Sub]
@@ -43,6 +47,7 @@ compile t = case t of
   D.App t1 (D.IntNand t2 t3)->(fillReg t1 t2 t3) ++ [Op Nand]
   D.App t1 (D.IntEq t2 t3)  ->(fillReg t1 t2 t3) ++ [Op Eq]  
   D.App t1 (D.IntLt t2 t3)  ->(fillReg t1 t2 t3) ++ [Op Lt]
+  D.Let (D.Fix t1) t2       ->(getCode 1 t1)++[LetFix]++[Let]++(getCode 2 t2)++[EndLet]
   D.App t1 (D.Fix t2)       ->(getCode 1 t1) ++ (getCode 2 t2) ++[Fix]++[Apply1]    
   D.App t1 t2               ->(getCode 1 t1) ++ (getCode 2 t2) ++ [Apply1]  
   otherwise                 ->(getCode 1 t)  
@@ -59,6 +64,9 @@ getCode i t = case t of
     D.Abs _ (D.Abs _ t1) -> [Close i (compile t1)]
     D.Abs _ t1           -> [Close i (compile t1)]
     D.App _ _            -> [Close i (compile t)]
+    D.Let _ _            -> [Close i (compile t)]
+    D.Fix t1             -> (getCode i t1) ++[Fix]
+    D.If t1 t2 t3        -> (fillReg t1 t2 t3)++[If]
     _                    -> error ("incorrect term in getCode"++ (show t))
 
 step::State -> Maybe State
@@ -85,18 +93,30 @@ value in this case will be 1 rather than 0.
 \begin{code}
   (Apply1:c,e,((Clo c1 e1),v2,v3))-> Just (c1,v2:e1,(Empty,Empty,Empty))
   (Apply2:c,e,((Clo c1 e1),v2,v3))-> Just (c1,v3:v2:e1,(Empty,Empty,Empty))
+  --
+  (Let:c,e, r@(v,_,_)) -> Just(c,v:e,r)
+  (EndLet:c,v:e,r)     -> Just(c,e,r)
 \end{code}
 Since if statements are wrapped in applications we know that the next part of 
-our code will ask for the value produced by the if statement in order apply it 
+our code will ask for the value produced by the if statement in orderLet apply it 
 to an abstraction, for this reason the value should be put on register 2 and
 later the abstraction will be put onto register 1, then the code will call for 
 application.
 \begin{code}
-  (If:c,e,(BoolVal t1,t2,t3))     -> if t1 then Just (c,e,(Empty,t2,Empty))
-                                     else Just (c,e,(Empty,t3,Empty))
+  (If:c,e,(BoolVal t1,t2,t3))     -> if t1 then Just (c,e,(t2,Empty,Empty))
+                                     else Just (c,e,(t3,Empty,Empty))
   (Fix:c, e, (c1'@(Clo c1 e1) ,(Clo((Close _ c2):c3) e2), v3))        ->
     let fClo = (Clo (Close 2 ((Close 2 c1:c2)):[Fix]) [])
        in Just (c, e, (c1', (Clo (c2++c3)(fClo:(fixRemove e fClo))),v3))
+  (LetFix:c, e,((Clo((Close _ c1):c2) e1), v2, v3)) ->
+    let fClo = (Clo (Close 2 ((Close 2 c1:c2)):[Fix]) [])
+       in Just (c, e, ((Clo (c1++c2) (fClo:(fixRemove e fClo))), v2, v3))
+    --  (Fix:c, e, (Value (Clo (Close c1:c2) e1)) : s)        ->
+    --let fClo = (Clo (Close ((Close c1:c2)):[Fix]) [])
+    --   in Just (c, e, (Value (Clo (c1++c2) (fClo:(fixRemove e fClo)))) : s)
+  --(Fix:c, e, (Value (Clo (Close c1:c2) e1)) : s)        ->
+  --  let fClo = (Clo (Close ((Close c1:c2)):[Fix]) [])
+  --     in Just (c, e, (Value (Clo (c1++c2) (fClo:(fixRemove e fClo)))) : s)
   --(Fix:c,e,((Clo c1 e1),(Clo((Close _ c2):c3) e2),v3)) -> 
   --  Just (c,e,((Clo c1 e1),(Clo (c2 ++ c3) ((CloFix (Close 2 ((Close 2 c2:c3)):[Fix])):(fixRemove e))), Empty))
   ((Op o):c,e,((Clo c1 e1),IntVal v2, IntVal v3))  -> 
