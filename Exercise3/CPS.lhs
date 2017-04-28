@@ -18,9 +18,9 @@ toCPS answerType t = case t of
     let aT = answerType
         t1'= toCPS aT t1
         t2'= toCPS aT t2
-        k  = checkFV ((S.fv t1)++(S.fv t2)) "k"
-        kf = checkFV ((S.fv t1)++(S.fv t2)) "kf"
-        v1 = checkFV ((S.fv t1)++(S.fv t2)) "v1"
+        k  = checkFV ((S.fv t1')++(S.fv t2')) "k"
+        kf = checkFV ((S.fv t1')++(S.fv t2')) "kf"
+        v1 = checkFV ((S.fv t1')++(S.fv t2')) "v1"
         in (S.Abs k aT
             (S.Let y 
              (S.Fix 
@@ -35,9 +35,9 @@ toCPS answerType t = case t of
     let aT = answerType
         t1'= toCPS aT t1
         t2'= toCPS aT (S.App (S.Var f) t2)
-        k  = checkFV ((S.fv t1)++(S.fv t2)) "k"
-        kf = checkFV ((S.fv t1)++(S.fv t2)) "kf"
-        v1 = checkFV ((S.fv t1)++(S.fv t2)) "v1"
+        k  = checkFV ((S.fv t1')++(S.fv t2')) "k"
+        kf = checkFV ((S.fv t1')++(S.fv t2')) "kf"
+        v1 = checkFV ((S.fv t1')++(S.fv t2')) "v1"
         in (S.Abs k aT 
             (S.App 
              (S.Abs f aT 
@@ -49,9 +49,9 @@ toCPS answerType t = case t of
                   (S.App t1' (S.Abs v1 aT (S.App (S.Var kf) (S.Var v1)))))) ))))      
   S.App t1 t2    -> let t1' = toCPS answerType t1
                         t2' = toCPS answerType t2
-                       in let k  = checkFV ((S.fv t1)++(S.fv t2)) "k"
-                              v1 = checkFV ((S.fv t1)++(S.fv t2)) "v1"
-                              v2 = checkFV ((S.fv t1)++(S.fv t2)) "v2"
+                       in let k  = checkFV ((S.fv t1')++(S.fv t2')) "k"
+                              v1 = checkFV ((S.fv t1')++(S.fv t2')) "v1"
+                              v2 = checkFV ((S.fv t1')++(S.fv t2')) "v2"
                              in (S.Abs k answerType 
                                  (S.App t1'
                                   (S.Abs v1 answerType 
@@ -60,25 +60,25 @@ toCPS answerType t = case t of
                                      (S.App 
                                       (S.App (S.Var v1) (S.Var v2)) (S.Var k)))
                                        )))) 
-  S.If t1 t2 t3  -> let k  = checkFV ((S.fv t1)++(S.fv t2)++(S.fv t3)) "k"
-                        k1 = checkFV ((S.fv t1)++(S.fv t2)++(S.fv t3)) "k1"
-                        v1 = checkFV ((S.fv t1)++(S.fv t2)++(S.fv t3)) "v1"
-                        v2 = checkFV ((S.fv t1)++(S.fv t2)++(S.fv t3)) "v2"
-                        v3 = checkFV ((S.fv t1)++(S.fv t2)++(S.fv t3)) "v3"
-                        aT = answerType
+  S.If t1 t2 t3  -> let aT = answerType
                         t1'= toCPS aT t1
                         t2'= toCPS aT t2
                         t3'= toCPS aT t3
+                        k  = checkFV ((S.fv t1')++(S.fv t2')++(S.fv t3')) "k"
+                        k1 = checkFV ((S.fv t1')++(S.fv t2')++(S.fv t3')) "k1"
+                        v1 = checkFV ((S.fv t1')++(S.fv t2')++(S.fv t3')) "v1"
+                        v2 = checkFV ((S.fv t1')++(S.fv t2')++(S.fv t3')) "v2"
+                        v3 = checkFV ((S.fv t1')++(S.fv t2')++(S.fv t3')) "v3"
                         in S.Abs k aT
                             (S.App t1'
                              (S.Abs v1 aT
                               (S.App (S.If (S.Var v1) t2' t3') (S.Var k))))   
   S.Let x t1 t2   -> toCPS answerType (S.App (S.Abs x answerType t2) t1)
   S.ParTerm t1    -> toCPS answerType t1
-  x               -> let k = checkFV (S.fv t) "k"
-                         v1= checkFV (S.fv t) "v1"
-                         v2= checkFV (S.fv t) "v2"
-                         pairT = cpsPair answerType t
+  x               -> let pairT = cpsPair answerType t
+                         k =checkFV ((S.fv (fst pairT))++(S.fv (snd pairT)))"k"
+                         v1=checkFV ((S.fv (fst pairT))++(S.fv (snd pairT)))"v1"
+                         v2=checkFV ((S.fv (fst pairT))++(S.fv (snd pairT)))"v2"
                         in S.Abs k answerType 
                                  (S.App (fst pairT) (S.Abs v1 S.TypeInt 
                                   (S.App (snd pairT) (S.Abs v2 S.TypeInt
