@@ -14,6 +14,10 @@ toCPS answerType t = case t of
                        in let k = checkFV (S.fv t1') "k"
                              in S.Abs k answerType (S.App (S.Var k) 
                                                     (S.Abs x tau t1'))
+\end{code}
+We modeled our let fix case after the letrec rule from the paper "Representing 
+Control A Study of The CPS Transformation".    
+\begin{code}                             
   S.Let y (S.Fix (S.Abs f _ (S.Abs x _ t1))) t2 ->
     let aT = answerType
         t1'= toCPS aT t1
@@ -31,22 +35,31 @@ toCPS answerType t = case t of
                   (S.Abs v1 aT 
                    (S.App (S.Var kf)(S.Var v1) ))))))) 
              (S.App t2' (S.Var k)))) 
+\end{code}
+Our app fix case is very similar to our let fix cases, the difference being that
+its an app with an abstraction and term.  Our fix now in tail position will be 
+applied to our term, however we must ensure that ultimately our fix takes t2 as 
+an argument.   
+\begin{code}          
   S.App (S.Fix (S.Abs f _ (S.Abs x _ t1))) t2 ->
     let aT = answerType
         t1'= toCPS aT t1
-        t2'= toCPS aT (S.App (S.Var f) t2)
+        f'  = checkFV ((S.fv t1')++(S.fv t2)) "f'"
+        t2'= toCPS aT (S.App (S.Var f') t2)
         k  = checkFV ((S.fv t1')++(S.fv t2')) "k"
         kf = checkFV ((S.fv t1')++(S.fv t2')) "kf"
         v1 = checkFV ((S.fv t1')++(S.fv t2')) "v1"
         in (S.Abs k aT 
             (S.App 
-             (S.Abs f aT 
+             (S.Abs f' aT 
               (S.App t2' (S.Var k)))
              (S.Fix 
               (S.Abs f aT 
                (S.Abs x aT 
                 (S.Abs kf aT 
-                  (S.App t1' (S.Abs v1 aT (S.App (S.Var kf) (S.Var v1)))))) ))))      
+                 (S.App t1' 
+                  (S.Abs v1 aT 
+                   (S.App (S.Var kf) (S.Var v1)))))) ))))      
   S.App t1 t2    -> let t1' = toCPS answerType t1
                         t2' = toCPS answerType t2
                        in let k  = checkFV ((S.fv t1')++(S.fv t2')) "k"
@@ -60,6 +73,11 @@ toCPS answerType t = case t of
                                      (S.App 
                                       (S.App (S.Var v1) (S.Var v2)) (S.Var k)))
                                        )))) 
+\end{code}
+When the if term is evaluated a cps form of the then or the else case has the 
+continuation applied to it.  The keeps our if lazy so only the appropriate case 
+is run.
+\begin{code}                                
   S.If t1 t2 t3  -> let aT = answerType
                         t1'= toCPS aT t1
                         t2'= toCPS aT t2
