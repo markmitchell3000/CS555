@@ -93,7 +93,8 @@ matchToken "fix"    = TkFix
 matchToken "let"    = TkLet
 matchToken "in"     = TkIn
 matchToken "end"    = TkEnd
-matchToken x        = if (isInt x) then TkIntLit (read x::Integer) else TkVarId x
+matchToken x        = if (isInt x) then TkIntLit (read x::Integer) 
+                                   else TkVarId x
 
 isInt :: [Char] -> Bool
 isInt xs = foldr (\x y -> (elem x ['0'..'9']) && y ) True xs
@@ -208,11 +209,11 @@ ifFix xs = if (last xs == TkFi) then (init xs) else error ("missing fi")
 -- however nested if cases are ignored via a counter such that the tokens are 
 --  not partitioned at this point inside nested terms. 
 caseHelper :: [Token] -> [Token] -> Token-> Int -> [Token]-> ([Token],[Token])
-caseHelper [] tk0 _ _ _ = error ("Incomplete "++(show (head tk0))++ " statement")
+caseHelper [] tk0 _ _ _ = error ("Incomplete "++(show (head tk0))++" statement")
 caseHelper (x:xs) tk0 tk n ys | ((n==0) && (x== tk)) = (ys , xs)
                             | ((not(n==0)) && (x== tk)) = 
                               caseHelper xs tk0 tk (n-1) (ys++[x])
-                            | x `elem` tk0 = caseHelper xs tk0 tk (n+1) (ys++[x])
+                            | x `elem` tk0 = caseHelper xs tk0 tk (n+1)(ys++[x])
                             | otherwise = caseHelper xs tk0 tk n (ys++[x])
 
 -- Handles the ParTerm case

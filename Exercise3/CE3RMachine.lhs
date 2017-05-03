@@ -33,11 +33,18 @@ type Env = [Value]
 type Registers =(Value,Value,Value)
 type State = (Code, Env, Registers)
 
+
 compile::D.Term ->  Code
 compile t = case t of
+\end{code}
+Lazy If Statement:
+The three terms of the if are placed on all three registers.  If the statement 
+is true the value on register 2 is placed on register 1, if it is false the 
+value on register 3 is placed on register 1.  The reason for this is the terms 
+in the if statement only receive the continuation if the conditional has 
+determined this action is appropriate.  In this way the if is kept lazy.
+\begin{code}  
   D.App (D.If t1 t2 t3) k   -> (fillReg t1 t2 t3)++[If]++(getCode 2 k)++[Apply1]
-  D.App (D.App t1 (D.Fix t2)) t3 ->(getCode 1 t1) ++ (getCode 2 t2)++[Fix]
-                                   ++(getCode 2 t2)++[Apply2]
   D.App (D.App t1 t2) t3    ->(fillReg t1 t2 t3) ++ [Apply2]
   D.App t1 (D.IntAdd t2 t3) ->(fillReg t1 t2 t3) ++ [Op Add]
   D.App t1 (D.IntSub t2 t3) ->(fillReg t1 t2 t3) ++ [Op Sub]
@@ -46,6 +53,15 @@ compile t = case t of
   D.App t1 (D.IntNand t2 t3)->(fillReg t1 t2 t3) ++ [Op Nand]
   D.App t1 (D.IntEq t2 t3)  ->(fillReg t1 t2 t3) ++ [Op Eq]  
   D.App t1 (D.IntLt t2 t3)  ->(fillReg t1 t2 t3) ++ [Op Lt]
+\end{code}
+App Fix and Let Fix:
+From the cps code two cases were handled the app fix and the let fix.  The app 
+fix ensured that the fix term was in tail position while the let fix ensured 
+that when the variable assigned to fix was called the fix was then applied in 
+tail position.  For this reason the app fix code places the the term being fixed 
+onto register 2.  The let fix term which is now in cps simply treats the let as
+syntactic sugar and converts it to an application.   
+\begin{code} 
   D.Let t1 t2               -> compile (D.App (D.Abs S.TypeBool t2) t1)
   D.App t1 (D.Fix t2)       ->(getCode 1 t1) ++ (getCode 2 t2) ++[Fix]++[Apply1]    
   D.App t1 t2               ->(getCode 1 t1) ++ (getCode 2 t2) ++ [Apply1]  
@@ -99,7 +115,12 @@ placing a closure on register 1 that will be applied to the continuation to be
 placed on register 2.
 \begin{code}
   (If:c,e,(BoolVal t1,t2,t3))     -> if t1 then Just (c,e,(t2,Empty,Empty))
-                                     else Just (c,e,(t3,Empty,Empty))                                  
+                                     else Just (c,e,(t3,Empty,Empty))
+\end{code}
+The fix instruction is pattern matched with the closure on register 2, the 
+register is updated and the environment is updates to remove any variables added 
+by the previous recursion.
+\begin{code}                               
   (Fix:c, e, (v1, (Clo((Close i c1):c2) e2), v3))        ->
     let fClo = (Clo ((Close 2 (Close i c1:c2)):[Fix]) [])
        in Just (c, e, (v1, (Clo (c1++c2)(fClo:(fixRemove e fClo))),v3))

@@ -36,13 +36,6 @@ data Slot = Value Value | Code Code | Env Env
 type Stack = [Slot]
 type State = (Code, Env, Stack)
 
-\end{code}
-CES stands for code, environment, stack.  Intermediate code is created from the 
-debruijin term given.  The environment is used to track free variables just as 
-it was in the nameless natural semantics.  The stack is used to store the 
-continuation of the program, similar to the CEK machine.
-\begin{code}
-
 compile::S.Term ->  Code
 compile t = case t of
     --

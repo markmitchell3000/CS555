@@ -10,14 +10,6 @@ data Value = BoolVal Bool| IntVal Integer| Clo S.Term Env
 
 type Env = [Value]
 
-\end{code}
-This is very similar to the previous Natural semantics but our values now 
-uses closures in place of abstractions.  This allows us to carry variable values
-in our environment rather than calling a substitution function.  Since this uses
-DeBruijn terms rather than variable names we can use these as indices of the 
-environment to locate the values of our variables.  
-\begin{code}
-
 evalInEnv::Env -> S.Term -> Maybe Value
 evalInEnv e t = case t of
   S.Tru             -> Just(BoolVal True)
