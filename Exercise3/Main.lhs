@@ -66,30 +66,30 @@
 \date{April 20, 2017}
 
 \begin{document}
-\setcounter{section}{1}
+\setcounter{section}{3}
 
 \section*{Mark Mitchell, Doug Keating}
 \section*{Exercise 3}
 
-\subsection{3.1 De Bruijn Notation}
+\subsection{De Bruijn Notation}
 \label{sec:core}
 
-De Bruijn notation is exactly the same as our previous notation byt with one key
+De Bruijn notation is exactly the same as our previous notation but with one key
 difference, all variable names are changed to integers that represent indices.  
 This index tells where to get the variable value form a list of values.  If the 
-variable is bound to the innermost lambda expression the variable will get its 
+variable is bound to the inner most lambda expression the variable will get its 
 value from the head of the list or index 0.  If the variable is a free variable 
-in the innermost lambda expression then the index will be used to find this 
+in the inner most lambda expression then the index will be used to find this 
 value in the list, the more lambda nested the variable, the higher the index.  
 
 Code:
 %\newpage
 %include DeBruijn.lhs
 
-\subsection{3.2 Natural Semantics with Nameless Terms}
+\subsection{Natural Semantics with Nameless Terms}
 \label{sec:core}
 
-This is very similar to the previous Natural semantics but our values now 
+This is very similar to the previous natural semantics but our values now 
 uses closures in place of abstractions.  This allows us to carry variable values
 in our environment rather than calling a substitution function.  Since this uses
 DeBruijn terms rather than variable names we can use these as indices of the 
@@ -99,7 +99,7 @@ Code:
 %\newpage
 %include NaturalSemanticsWithEnvironmentsClosuresAndDeBruijnIndices.lhs
 
-\subsection{3.3 CES Machine}
+\subsection{CES Machine}
 \label{sec:core}
 
 CES machine is a 3 tuple of code, environment, stack.  Intermediate code is 
@@ -111,7 +111,7 @@ Source code:
 %\newpage
 %include CESMachine.lhs
 
-\subsection{3.4 Continuation Passing Style (CPS)}
+\subsection{Continuation Passing Style (CPS)}
 \label{sec:core}
 
 By converting our term/program to CPS control is passed explicitly in the form 
@@ -121,7 +121,7 @@ Code:
 %\newpage
 %include CPS.lhs
 
-\subsection{3.5 CE3R Machine}
+\subsection{CE3R Machine}
 \label{sec:core}
 
 The CE3R Machine is similar to the CES machine with code and environment but 
@@ -206,7 +206,7 @@ main = do
 
 \end{code}
 
-\subsection{3.6 Test Cases}
+\subsection{Test Cases}
 \label{sec:core}
 \begin{verbatim}
 Test Case 1:
